@@ -1,8 +1,9 @@
+using Microsoft.EntityFrameworkCore;
 using QuickCheckr;
 using QuickCheckr.UnderTheHood;
 using QuickFuzzr;
 
-namespace QuickWebr.Bolts;
+namespace QuickWebr.Bolts.CreateBuilders;
 
 public class CreateBuilder(Spider api, string route)
 {
@@ -30,31 +31,20 @@ public class CreateBuilder<TRequest, TResponse, TPoolElement>(
     Func<TResponse, bool> responseCheck,
     Func<IReadOnlyCollection<TPoolElement>, bool> predicate)
 {
-    public CreateBuilder<TRequest, TResponse, TPoolElement, TId> EntityIdFrom<TId>(Func<TResponse, TId> getId)
-        => new(api, route, fuzzr, responseCheck, predicate, getId);
+    public CreateBuilderFinal<TRequest, TResponse, TPoolElement> Store(Func<TResponse, TPoolElement> toPool) =>
+        new(api, route, fuzzr, responseCheck, predicate, toPool);
 }
 
-public class CreateBuilder<TRequest, TResponse, TPoolElement, TId>(
+public class CreateBuilderFinal<TRequest, TResponse, TPoolElement>(
     Spider api,
     string route,
     FuzzrOf<TRequest> fuzzr,
     Func<TResponse, bool> responseCheck,
     Func<IReadOnlyCollection<TPoolElement>, bool> predicate,
-    Func<TResponse, TId> getId)
-{
-    public CreateBuilderFinal<TRequest, TResponse, TPoolElement, TId> Store(Func<TResponse, TPoolElement> toPool) =>
-        new(api, route, fuzzr, responseCheck, predicate, getId, toPool);
-}
-public class CreateBuilderFinal<TRequest, TResponse, TPoolElement, TId>(
-    Spider api,
-    string route,
-    FuzzrOf<TRequest> fuzzr,
-    Func<TResponse, bool> responseCheck,
-    Func<IReadOnlyCollection<TPoolElement>, bool> predicate,
-    Func<TResponse, TId> getId,
     Func<TResponse, TPoolElement> toPool)
 {
     public CheckrOf<(Func<bool>, CheckrOf<Case>)> As<TEntity>(
+        Func<DbContext, TResponse, TEntity> getEntity,
         params (string label, Func<TRequest, TEntity, bool> expectation)[] expectations)
         where TEntity : class =>
         Trackr.PoolWhen(predicate,
@@ -62,7 +52,7 @@ public class CreateBuilderFinal<TRequest, TResponse, TPoolElement, TId>(
             from response in api.Route(route, request).Returns<TResponse>()
             from created in Checkr.Expect($"'{route}' Response", () => responseCheck(response))
             from store in Trackr.ToPool($"'{route}' to Pool", toPool(response))
-            from reloaded in api.GetByIdCheckr<TId, TEntity>(getId(response))
+            from reloaded in api.GetEntityCheckr((db) => getEntity(db, response))
             from checks in Combine.Checkrs(expectations.Select(a =>
                 Checkr.Expect($"'{route}' {a.label}", () => a.expectation(request, reloaded))))
             select Case.Closed);
