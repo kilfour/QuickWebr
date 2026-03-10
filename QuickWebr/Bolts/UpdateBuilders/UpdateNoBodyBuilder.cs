@@ -17,7 +17,6 @@ public class UpdateNoBodyBuilder<TPoolElement, TRouteId>(
         => new(api, route, poolCondition, getRouteId, routeFactory, update);
 }
 
-
 public class UpdateNoBodyBuilderStored<TPoolElement, TRouteId>(
     Spider api,
     string route,
@@ -27,14 +26,27 @@ public class UpdateNoBodyBuilderStored<TPoolElement, TRouteId>(
     Func<TPoolElement, TPoolElement> update
 )
 {
+    public UpdateNoBodyBuilderStored<TPoolElement, TRouteId, TDbValue> Load<TDbValue>(Func<DbContext, TRouteId, TDbValue> loader)
+        => new(api, route, poolCondition, getRouteId, routeFactory, update, loader);
+}
+
+
+public class UpdateNoBodyBuilderStored<TPoolElement, TRouteId, TDbValue>(
+    Spider api,
+    string route,
+    PoolCondition<TPoolElement> poolCondition,
+    Func<TPoolElement, TRouteId> getRouteId,
+    Func<TRouteId, string> routeFactory,
+    Func<TPoolElement, TPoolElement> update,
+    Func<DbContext, TRouteId, TDbValue> loader
+)
+{
     public CheckrOf<(Func<bool>, CheckrOf<Case>)> As<TEntity>(
-        Func<DbContext, TRouteId, TEntity> getEntity,
-        params (string label, Func<TEntity, bool> expectation)[] expectations)
-        where TEntity : class =>
+        params (string label, Func<TDbValue, bool> expectation)[] expectations) =>
         poolCondition.GetCheckr(route, element =>
             from routeId in Checkr.Capture(() => getRouteId(element.Value))
             from response in api.LabeledRoute(route, routeFactory(routeId)).ReturnsNothing()
-            from reloaded in api.GetEntityCheckr((db) => getEntity(db, routeId))
+            from reloaded in api.GetEntityCheckr((db) => loader(db, routeId))
             from checks in Combine.Checkrs(expectations.Select(a =>
                 Checkr.Expect($"'{route}' {a.label}", () => a.expectation(reloaded))))
             from store in element.Replace(update(element.Value))

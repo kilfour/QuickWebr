@@ -8,7 +8,7 @@ using QuickWebr.Bolts.UpdateBuilders;
 
 namespace QuickWebr;
 
-public class Spider(HttpClient client, Func<DbContext> dbFactory)
+public class Spider(HttpClient client, Func<DbContext> dbFactory) : IApi
 {
     public HttpClient Client { get; } = client;
 
@@ -28,9 +28,9 @@ public class Spider(HttpClient client, Func<DbContext> dbFactory)
         select call);
 
     public CheckrOf<TEntity> GetEntityCheckr<TEntity>(Func<DbContext, TEntity> load)
-        => Checkr.Capture(() => GetEntity(load));
+        => Checkr.Capture(() => Query(load));
 
-    public TEntity GetEntity<TEntity>(Func<DbContext, TEntity> load)
+    public TEntity Query<TEntity>(Func<DbContext, TEntity> load)
     {
         using var db = dbFactory();
         var entity = load(db);
@@ -47,9 +47,6 @@ public class Spider(HttpClient client, Func<DbContext> dbFactory)
         return entity!;
     }
 
-    public CreateBuilder Create(string route) =>
-        new(this, route);
-
-    public UpdateBuilder Update(string route) =>
-        new(this, route);
+    public CreateBuilder Create(string route) => new(this, route);
+    public UpdateBuilder Update(string route) => new(this, route);
 }

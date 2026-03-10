@@ -6,16 +6,36 @@ using QuickCheckr.UnderTheHood;
 namespace QuickWebr;
 
 
+
 public static class Webr
 {
-    public static Webr<T> Named<T>(
-        string name,
-        Func<T> contextFactory,
-        Func<T, HttpClient> clientFactory,
-        Func<HttpClient, bool> isAuthenticated,
-        Func<HttpClient, Task> authenticate,
-        Func<T, DbContext> dbFactory) =>
-        Webr<T>.Named(name, contextFactory, clientFactory, isAuthenticated, authenticate, dbFactory);
+    public static WebrBuilder Named(string name) => new(name);
+
+    public class WebrBuilder(string name)
+    {
+        public WebrBuilder1<T> Context<T>(Func<T> contextFactory) => new(name, contextFactory);
+    }
+
+    public class WebrBuilder1<T>(string name, Func<T> contextFactory)
+    {
+        public WebrBuilder2<T> Client(Func<T, HttpClient> clientFactory) => new(name, contextFactory, clientFactory);
+    }
+
+    public class WebrBuilder2<T>(string name, Func<T> contextFactory, Func<T, HttpClient> clientFactory)
+    {
+        private Func<HttpClient, bool> isAuthenticated = a => true;
+        private Func<HttpClient, Task> authenticate = a => Task.CompletedTask;
+
+        public WebrBuilder2<T> Authentication(Func<HttpClient, bool> isAuthenticated, Func<HttpClient, Task> authenticate)
+        {
+            this.isAuthenticated = isAuthenticated;
+            this.authenticate = authenticate;
+            return this;
+        }
+
+        public Webr<T> Database(Func<T, DbContext> dbFactory) =>
+            Webr<T>.Named(name, contextFactory, clientFactory, isAuthenticated, authenticate, dbFactory);
+    }
 }
 
 public class Webr<TContext>
@@ -58,14 +78,14 @@ public class Webr<TContext>
         return this;
     }
 
-    private readonly List<Func<Spider, CheckrOf<Case>>> invariants = [];
+    private readonly List<Func<IDbAccess, CheckrOf<Case>>> invariants = [];
     private readonly Func<TContext> contextFactory;
     private readonly Func<TContext, HttpClient> clientFactory;
     private readonly Func<HttpClient, bool> isAuthenticated;
     private readonly Func<HttpClient, Task> authenticate;
     private readonly Func<TContext, DbContext> dbFactory;
 
-    public Webr<TContext> ForAll<T>(string label, Func<Spider, T, bool> expectation)
+    public Webr<TContext> ForAll<T>(string label, Func<IDbAccess, T, bool> expectation)
     {
         invariants.Add(a => Trackr.PoolExpectEach<T>(label, b => expectation(a, b)));
         return this;
