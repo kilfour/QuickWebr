@@ -41,7 +41,7 @@ public class UpdateNoBodyBuilderStored<TPoolElement, TRouteId, TDbValue>(
     Func<DbContext, TRouteId, TDbValue> loader
 )
 {
-    public CheckrOf<(Func<bool>, CheckrOf<Case>)> As<TEntity>(
+    public CheckrOf<(Func<bool>, CheckrOf<Case>)> Expect(
         params (string label, Func<TDbValue, bool> expectation)[] expectations) =>
         poolCondition.GetCheckr(route, element =>
             from routeId in Checkr.Capture(() => getRouteId(element.Value))
