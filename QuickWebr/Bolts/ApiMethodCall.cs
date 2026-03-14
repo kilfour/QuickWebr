@@ -25,7 +25,9 @@ public class ApiMethodCall(string route, CheckrOf<HttpResponseMessage> requestMe
         select Case.Closed;
 
     private static bool StatusCodeIsSuccess(HttpResponseMessage response) =>
-         response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NoContent;
+         response.StatusCode == HttpStatusCode.OK ||
+         response.StatusCode == HttpStatusCode.NoContent ||
+         response.StatusCode == HttpStatusCode.Created;
 
     private static string? GetProblem(HttpResponseMessage response)
     {
