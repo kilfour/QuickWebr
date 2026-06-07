@@ -1,6 +1,8 @@
 ## Next version: 0.0.1 : 
 ### Doing
 ### Todo
+* FIX .CAPTURE THROWS => EXCEPTION WEIRDNESS
+  What happened here ?
 ### Wish List
 ### Doc
 ### Ongoing

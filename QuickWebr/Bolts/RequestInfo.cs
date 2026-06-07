@@ -1,7 +1,7 @@
-using QuickCheckr.UnderTheHood.Runners.InputShrinking.Bolts.InputReduction;
+using QuickCheckr;
 using QuickFuzzr;
 
-namespace QuickWebr.Bolts.UpdateBuilders;
+namespace QuickWebr.Bolts;
 
 public record RequestInfo<TPoolElement, TRequest>(
     FuzzrOf<TRequest> Fuzzr,

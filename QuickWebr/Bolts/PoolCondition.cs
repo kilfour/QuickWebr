@@ -1,6 +1,6 @@
 using QuickCheckr;
 
-namespace QuickWebr.Bolts.UpdateBuilders;
+namespace QuickWebr.Bolts;
 
 public record PoolCondition<TPoolElement>(
     Func<IReadOnlyCollection<TPoolElement>, bool>? OnCollection,
