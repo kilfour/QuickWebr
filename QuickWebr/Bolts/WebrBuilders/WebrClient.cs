@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-
 namespace QuickWebr;
 
 public class WebrClient<T>(string name, Func<T> contextFactory, Func<T, HttpClient> clientFactory)

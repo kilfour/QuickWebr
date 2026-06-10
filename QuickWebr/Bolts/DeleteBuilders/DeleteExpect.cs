@@ -32,6 +32,7 @@ public class DeleteExpect<TReader, TPoolElement, TRouteId, TDbValue>(
         return (client, db) =>
             poolCondition.GetCheckr(name, element =>
                 from route in Checkr.Capture(() => routeFactory(getRouteId(element.Value)))
+                from traceRoute in Checkr.Trace("Route", () => route)
                 from response in Checkr.ShrinkableAct(name,
                     () => Send<TPoolElement>.Request(
                         client,

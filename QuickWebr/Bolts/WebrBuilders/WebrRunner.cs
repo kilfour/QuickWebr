@@ -1,5 +1,5 @@
-using Microsoft.EntityFrameworkCore;
 using QuickCheckr;
+using QuickCheckr.Diagnostics;
 using QuickCheckr.Protocol;
 using QuickCheckr.UnderTheHood;
 
@@ -18,7 +18,12 @@ public class WebrRunner<TContext, TReader>
         Func<TContext, TReader> readBackFactory
     )
     {
-        configure = cfg => cfg with { FileAs = name, ShrinkMode = ShrinkMode.ExceptReduction };
+        configure = cfg => cfg with
+        {
+            FileAs = name,
+            WarningLevel = WarningLevel.Debug,
+            ShrinkMode = ShrinkMode.ExceptReduction
+        };
         this.contextFactory = contextFactory;
         this.clientFactory = clientFactory;
         this.isAuthenticated = isAuthenticated;
@@ -62,11 +67,14 @@ public class WebrRunner<TContext, TReader>
     //     return this;
     // }
 
-    public void Run(CheckrOfTRun.RunCount runs, CheckrOfTRun.ExecutionCount executionsPerRun) =>
+    public void Run(RunCount runs, ExecutionCount executionsPerRun) =>
         TheCheckr().Run(runs, executionsPerRun, configure);
 
-    public void Run(int seed, CheckrOfTRun.ExecutionCount executionsPerRun) =>
+    public void Run(int seed, ExecutionCount executionsPerRun) =>
         TheCheckr().Run(seed, executionsPerRun, configure);
+
+    public void Autopsy(int seed, ExecutionCount executionsPerRun, Microtome? microtome = null) =>
+        TheCheckr().Autopsy(seed, executionsPerRun, a => configure(a), microtome is null ? Microtome.Default : microtome);
 
     private CheckrOf<Case> TheCheckr() =>
         from context in Trackr.Stashed(() => contextFactory())
@@ -74,6 +82,6 @@ public class WebrRunner<TContext, TReader>
         from db in Trackr.Stashed(() => readBackFactory(context))
         from auth in Checkr.ActWhen("Auth", () => !isAuthenticated(client), () => authenticate(client))
         from _ in Checkr.OneOfWhen([.. methods.Select(m => m.Define().Checkr(client, db))])
-            //from invariants in Combine.Checkrs(invariants.Select(a => a(api)))
+            // from invariants in Combine.Checkrs(invariants.Select(a => a(api)))
         select Case.Closed;
 }

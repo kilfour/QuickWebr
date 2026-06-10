@@ -27,6 +27,7 @@ public static class Send<TPoolElement>
         string route)
             => httpMethod.Method switch
             {
+                "GET" => client.GetAsync(route),
                 "DELETE" => client.DeleteAsync(route),
                 _ => throw new NotSupportedException()
             };

@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using QuickCheckr;
 using QuickWebr.Bolts.CreateBuilders;
 using QuickWebr.Bolts.DeleteBuilders;

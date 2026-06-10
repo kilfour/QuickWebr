@@ -34,16 +34,19 @@ public class UpdateExpect<TReader, TPoolElement, TRequest, TRouteId, TDbValue>(
         return (client, db) =>
             poolCondition.GetCheckr(name, element =>
                 from route in Checkr.Capture(() => routeFactory(getRouteId(element.Value)))
+                from traceRoute in Checkr.Trace("Route", () => route)
                 from request in Checkr.Input($"'{name}' Request", requestInfo.Fuzzr, requestInfo.GetShrinkers(element.Value))
-                from response in Checkr.ShrinkableAct(route,
+                from response in Checkr.ShrinkableAct(name,
                     () => Send<TPoolElement, TRequest>.Request(client, httpMethod, route, request))
-                from responseIsSuccess in StatusCodeIs.Success(name, response)
-                from reloaded in Checkr.Capture(() => read(db, element.Value))
-                from checks in Combine.Checkrs(expectations.Select(a =>
-                    Checkr.Expect($"'{name}' {a.label}", () => a.expectation(request, reloaded))))
-                from failures in Combine.Checkrs(
-                    failures.Select(a => a.GetCheckr(client, httpMethod, element.Value, request)))
-                from store in element.Replace(store(element.Value, request))
+                from guard in Checkr.When(() => response.HasExecuted,
+                    from responseIsSuccess in StatusCodeIs.Success(name, response)
+                    from stored in element.Replace(store(element.Value, request))
+                    from reloaded in Checkr.Capture(() => read(db, element.Value))
+                    from checks in Combine.Checkrs(expectations.Select(a =>
+                        Checkr.Expect($"'{name}' {a.label}", () => a.expectation(request, reloaded))))
+                    from failureChecks in Combine.Checkrs(
+                        failures.Select(a => a.GetCheckr(client, httpMethod, element.Value, request)))
+                    select Case.Closed)
                 select Case.Closed);
     }
 }

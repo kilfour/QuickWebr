@@ -1,8 +1,9 @@
 namespace QuickWebr.Bolts.GetBuilders;
 
 public class GetRoute<TReader, TPoolElement>(
-    string name)
+    string name,
+    Func<IReadOnlyCollection<TPoolElement>, bool> poolCondition)
 {
-    public GetResponseIs<TReader, TPoolElement> Route(string route)
-        => new(name, route);
+    public GetSendQuery<TReader, TPoolElement> Route(string route)
+        => new(name, poolCondition, route);
 }

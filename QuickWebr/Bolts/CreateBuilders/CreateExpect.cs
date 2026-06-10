@@ -22,12 +22,13 @@ public class CreateExpect<TReader, TRequest, TResponse, TPoolElement, TDbValue>(
     {
         return (client, db) =>
             Trackr.PoolWhen(predicate,
+                from traceRoute in Checkr.Trace("Route", () => route)
                 from request in Checkr.Input($"'{name}' Request", fuzzr)
                 from response in Checkr.ShrinkableAct(name, () => client.PostAsJsonAsync(route, request))
                 from responseIsSuccess in StatusCodeIs.Success(name, response)
-                from result in Checkr.Capture(() => response.Result.Content.ReadFromJsonAsync<TResponse>())
-                from created in Checkr.Expect($"'{name}' Response", () => responseCheck(result.Result))
-                from stored in Trackr.ToPool($"'{name}' to Pool", () => toPool(request, result.Result))
+                from result in Checkr.Capture(() => response.Result.Content.ReadFromJsonAsync<TResponse>().Result)
+                from created in Checkr.Expect($"'{name}' Response", () => responseCheck(result))
+                from stored in Trackr.ToPool($"'{name}' to Pool", () => toPool(request, result))
                 from reloaded in Checkr.Capture(() => read(db, stored))
                 from checks in Combine.Checkrs(expectations.Select(a =>
                     Checkr.Expect($"'{name}' {a.label}", () => a.expectation(request, reloaded))))
