@@ -15,13 +15,31 @@ public class UpdateExpect<TReader, TPoolElement, TRequest, TRouteId, TDbValue>(
     Func<TPoolElement, TRequest, TPoolElement> store,
     Func<TReader, TPoolElement, TDbValue> read)
 {
-    private List<MethodFailure<TPoolElement, TRequest, TRouteId>> failures = [];
+    private readonly List<MethodFailure<TPoolElement, TRequest, TRouteId>> failures = [];
+
     public UpdateExpect<TReader, TPoolElement, TRequest, TRouteId, TDbValue> FailsWith(
         string label,
         HttpStatusCode statusCode,
         Func<TPoolElement, TRequest, (TPoolElement, TRequest)> mutate)
     {
         failures.Add(new MethodFailure<TPoolElement, TRequest, TRouteId>(statusCode, $"'{name}' {label}", mutate, getRouteId, routeFactory));
+        return this;
+    }
+    public UpdateExpect<TReader, TPoolElement, TRequest, TRouteId, TDbValue> FailsWith(
+            string label,
+            HttpStatusCode statusCode,
+            Func<TPoolElement, TPoolElement> mutate)
+    {
+        failures.Add(new MethodFailure<TPoolElement, TRequest, TRouteId>(statusCode, $"'{name}' {label}", (e, r) => (mutate(e), r), getRouteId, routeFactory));
+        return this;
+    }
+
+    public UpdateExpect<TReader, TPoolElement, TRequest, TRouteId, TDbValue> FailsWith(
+        string label,
+        HttpStatusCode statusCode,
+        Func<TRequest, TRequest> mutate)
+    {
+        failures.Add(new MethodFailure<TPoolElement, TRequest, TRouteId>(statusCode, $"'{name}' {label}", (e, r) => (e, mutate(r)), getRouteId, routeFactory));
         return this;
     }
 

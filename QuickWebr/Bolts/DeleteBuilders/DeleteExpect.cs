@@ -23,13 +23,8 @@ public class DeleteExpect<TReader, TPoolElement, TRouteId, TDbValue>(
         return this;
     }
 
-    public Specification<TReader> Expect(params (string label, Func<TDbValue, bool> expectation)[] expectations)
-        => new(TheCheckr(expectations));
-
-    private Func<HttpClient, TReader, CheckrOf<(Func<bool>, CheckrOf<Case>)>> TheCheckr(
-        params (string label, Func<TDbValue, bool> expectation)[] expectations)
-    {
-        return (client, db) =>
+    public Specification<TReader> Expect(params (string label, Func<TPoolElement, TDbValue, bool> expectation)[] expectations)
+        => new((client, db) =>
             poolCondition.GetCheckr(name, element =>
                 from route in Checkr.Capture(() => routeFactory(getRouteId(element.Value)))
                 from traceRoute in Checkr.Trace("Route", () => route)
@@ -41,10 +36,9 @@ public class DeleteExpect<TReader, TPoolElement, TRouteId, TDbValue>(
                 from responseIsSuccess in StatusCodeIs.Success(name, response)
                 from reloaded in Checkr.Capture(() => read(db, element.Value))
                 from checks in Combine.Checkrs(expectations.Select(a =>
-                    Checkr.Expect($"'{name}' {a.label}", () => a.expectation(reloaded))))
+                    Checkr.Expect($"'{name}' {a.label}", () => a.expectation(element.Value, reloaded))))
                 from failures in Combine.Checkrs(
                     failures.Select(a => a.GetCheckr(client, httpMethod, element.Value)))
                 from store in element.Remove()
-                select Case.Closed);
-    }
+                select Case.Closed));
 }

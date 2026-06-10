@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using QuickCheckr;
 using QuickCheckr.UnderTheHood;
@@ -14,6 +15,16 @@ public class CreateExpect<TReader, TRequest, TResponse, TPoolElement, TDbValue>(
     Func<TRequest, TResponse, TPoolElement> toPool,
     Func<TReader, TPoolElement, TDbValue> read)
 {
+    private List<MethodNoIdFailure<TPoolElement, TRequest>> failures = [];
+    public CreateExpect<TReader, TRequest, TResponse, TPoolElement, TDbValue> FailsWith(
+        string label,
+        HttpStatusCode statusCode,
+        Func<TRequest, TRequest> mutate)
+    {
+        failures.Add(new MethodNoIdFailure<TPoolElement, TRequest>(statusCode, $"'{name}' {label}", route, mutate));
+        return this;
+    }
+
     public Specification<TReader> Expect(params (string label, Func<TRequest, TDbValue, bool> expectation)[] expectations)
         => new(TheCheckr(expectations));
 
@@ -32,6 +43,8 @@ public class CreateExpect<TReader, TRequest, TResponse, TPoolElement, TDbValue>(
                 from reloaded in Checkr.Capture(() => read(db, stored))
                 from checks in Combine.Checkrs(expectations.Select(a =>
                     Checkr.Expect($"'{name}' {a.label}", () => a.expectation(request, reloaded))))
+                from failureChecks in Combine.Checkrs(
+                    failures.Select(a => a.GetCheckr(client, HttpMethod.Post, request)))
                 select Case.Closed);
     }
 }

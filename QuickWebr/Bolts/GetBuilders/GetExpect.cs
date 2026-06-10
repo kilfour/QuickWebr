@@ -45,6 +45,15 @@ public class GetExpect<TReader, TPoolElement, TResponse>(
         return this;
     }
 
+    public GetExpect<TReader, TPoolElement, TResponse> When(
+        string label,
+        Func<TPoolElement, (string, string)> mutate,
+        Func<TResponse, bool> expectation)
+    {
+        alternates.Add(new Alternate<TPoolElement, TResponse>($"'{name}' {label}", route, mutate, (r, e) => expectation(r)));
+        return this;
+    }
+
     public Specification<TReader> Expect(string label, Func<TResponse, TPoolElement, bool> expectation) =>
         new((client, db) =>
             Trackr.PoolWhen(name, poolCondition, element =>

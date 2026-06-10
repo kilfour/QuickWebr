@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using QuickCheckr;
 using QuickCheckr.Diagnostics;
 using QuickCheckr.Protocol;
@@ -84,4 +85,23 @@ public class WebrRunner<TContext, TReader>
         from _ in Checkr.OneOfWhen([.. methods.Select(m => m.Define().Checkr(client, db))])
             // from invariants in Combine.Checkrs(invariants.Select(a => a(api)))
         select Case.Closed;
+
+    public void Scenario(params ApiMethod<TReader>[] methods)
+    {
+        var checkr =
+            from context in Trackr.Stashed(() => contextFactory())
+            from client in Trackr.Stashed(() => clientFactory(context))
+            from db in Trackr.Stashed(() => readBackFactory(context))
+            from auth in Checkr.ActWhen("Auth", () => !isAuthenticated(client), () => authenticate(client))
+            from seq in Checkr.Sequence(
+                [.. methods.Select(m => (m.GetType().Name, Option: m.Define().Checkr(client, db)))
+                    .Select(a =>
+                    from option in a.Option
+                    from checkExecute in Checkr.Expect($"{a.Name} Can Execute", () => option.Item1())
+                    from execute in option.Item2
+                    select Case.Closed)]
+            )
+            select Case.Closed;
+        checkr.Run(1.Runs(), methods.Length.ExecutionsPerRun(), configure);
+    }
 }
