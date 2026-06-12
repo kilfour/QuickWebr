@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuickWebr.Tests", "QuickWeb
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuickWebr.WriteDocs", "QuickWebr.WriteDocs\QuickWebr.WriteDocs.csproj", "{C8F329E4-CB82-439E-90E2-3E3A41037CB8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContactManager", "ContactManager\ContactManager.csproj", "{6700D2BC-B08C-43FA-B3A0-6ACBC73B5141}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{C8F329E4-CB82-439E-90E2-3E3A41037CB8}.Release|x64.Build.0 = Release|Any CPU
 		{C8F329E4-CB82-439E-90E2-3E3A41037CB8}.Release|x86.ActiveCfg = Release|Any CPU
 		{C8F329E4-CB82-439E-90E2-3E3A41037CB8}.Release|x86.Build.0 = Release|Any CPU
+		{6700D2BC-B08C-43FA-B3A0-6ACBC73B5141}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6700D2BC-B08C-43FA-B3A0-6ACBC73B5141}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6700D2BC-B08C-43FA-B3A0-6ACBC73B5141}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6700D2BC-B08C-43FA-B3A0-6ACBC73B5141}.Debug|x64.Build.0 = Debug|Any CPU
+		{6700D2BC-B08C-43FA-B3A0-6ACBC73B5141}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6700D2BC-B08C-43FA-B3A0-6ACBC73B5141}.Debug|x86.Build.0 = Debug|Any CPU
+		{6700D2BC-B08C-43FA-B3A0-6ACBC73B5141}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6700D2BC-B08C-43FA-B3A0-6ACBC73B5141}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6700D2BC-B08C-43FA-B3A0-6ACBC73B5141}.Release|x64.ActiveCfg = Release|Any CPU
+		{6700D2BC-B08C-43FA-B3A0-6ACBC73B5141}.Release|x64.Build.0 = Release|Any CPU
+		{6700D2BC-B08C-43FA-B3A0-6ACBC73B5141}.Release|x86.ActiveCfg = Release|Any CPU
+		{6700D2BC-B08C-43FA-B3A0-6ACBC73B5141}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

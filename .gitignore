@@ -53,5 +53,7 @@ CodeCoverage/
 TestResult.xml
 nunit-*.xml
 
-.quickcheckr/
-.quickpulse/
+*.qr
+*.qv
+*.log
+temp*.md

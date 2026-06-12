@@ -1,2 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+﻿using QuickPulse.Explains;
+using QuickWebr.Tests.ContactManager;
+
+Explain.This<ContactManagerAcceptanceTests>("Docs/contact-manager.md");

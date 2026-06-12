@@ -25,14 +25,6 @@ public class UpdateExpect<TReader, TPoolElement, TRequest, TRouteId, TDbValue>(
         failures.Add(new MethodFailure<TPoolElement, TRequest, TRouteId>(statusCode, $"'{name}' {label}", mutate, getRouteId, routeFactory));
         return this;
     }
-    public UpdateExpect<TReader, TPoolElement, TRequest, TRouteId, TDbValue> FailsWith(
-            string label,
-            HttpStatusCode statusCode,
-            Func<TPoolElement, TPoolElement> mutate)
-    {
-        failures.Add(new MethodFailure<TPoolElement, TRequest, TRouteId>(statusCode, $"'{name}' {label}", (e, r) => (mutate(e), r), getRouteId, routeFactory));
-        return this;
-    }
 
     public UpdateExpect<TReader, TPoolElement, TRequest, TRouteId, TDbValue> FailsWith(
         string label,

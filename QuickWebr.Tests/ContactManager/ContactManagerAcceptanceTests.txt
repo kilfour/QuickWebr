@@ -1,0 +1,21 @@
+ ------------------------------------------------------------
+ 10 Runs
+ ------------------------------------------------------------
+ Passed Expectations
+ - 'Get Contacts' Status Code is Success: 123x
+ - 'Get Contacts' Response: 123x
+ - 'Create Contact' Status Code is Success: 126x
+ - 'Create Contact' Response: 126x
+ - 'Create Contact' Name: 126x
+ - 'Delete Contact' Status Code is Success: 88x
+ - 'Delete Contact' Deleted: 88x
+ - 'Delete Contact' Not Found, Status Code: 10x
+ - 'Get Contacts' Contains All Stored Contacts: 93x
+ - 'Search Contacts' Status Code is Success: 86x
+ - 'Search Contacts' Response: 86x
+ - 'Search Contacts' Contains Stored Contact: 86x
+ - 'Search Contacts' Empty List, Status Code: 10x
+ - 'Update Contact' Status Code is Success: 77x
+ - 'Update Contact' Name: 77x
+ - 'Update Contact' Not Found, Status Code: 10x
+ ------------------------------------------------------------

@@ -1,10 +1,12 @@
-using System.Runtime.InteropServices;
 using QuickCheckr;
 using QuickCheckr.Diagnostics;
 using QuickCheckr.Protocol;
 using QuickCheckr.UnderTheHood;
 
-namespace QuickWebr;
+namespace QuickWebr.Bolts.WebrBuilders;
+
+
+
 
 public class WebrRunner<TContext, TReader>
 {
@@ -42,7 +44,11 @@ public class WebrRunner<TContext, TReader>
         new(name, contextFactory, clientFactory, isAuthenticated, authenticate, readBackFactory);
 
     private ApiMethod<TReader>[] methods = [];
-    public WebrRunner<TContext, TReader> Methods(params ApiMethod<TReader>[] methods) { this.methods = methods; return this; }
+    public ConfiguredCheckr Methods(params ApiMethod<TReader>[] methods)
+    {
+        this.methods = methods;
+        return TheCheckr().Configure(configure);
+    }
 
     //private readonly List<Func<IDbAccess, CheckrOf<Case>>> invariants = [];
     private readonly Func<TContext> contextFactory;
@@ -67,15 +73,6 @@ public class WebrRunner<TContext, TReader>
     //     };
     //     return this;
     // }
-
-    public void Run(RunCount runs, ExecutionCount executionsPerRun) =>
-        TheCheckr().Run(runs, executionsPerRun, configure);
-
-    public void Run(int seed, ExecutionCount executionsPerRun) =>
-        TheCheckr().Run(seed, executionsPerRun, configure);
-
-    public void Autopsy(int seed, ExecutionCount executionsPerRun, Microtome? microtome = null) =>
-        TheCheckr().Autopsy(seed, executionsPerRun, a => configure(a), microtome is null ? Microtome.Default : microtome);
 
     private CheckrOf<Case> TheCheckr() =>
         from context in Trackr.Stashed(() => contextFactory())
@@ -102,6 +99,6 @@ public class WebrRunner<TContext, TReader>
                     select Case.Closed)]
             )
             select Case.Closed;
-        checkr.Run(1.Runs(), methods.Length.ExecutionsPerRun(), configure);
+        checkr.Configure(configure).Run(1.Runs(), methods.Length.ExecutionsPerRun());
     }
 }
