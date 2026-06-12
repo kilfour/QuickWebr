@@ -33,7 +33,8 @@ namespace QuickWebr.Tests.ContactManager;
 [DocReport]
 public class ContactManagerAcceptanceTests : WebrRunTest<ContactManagerAcceptanceTests>
 {
-    protected override bool Asserts => false;
+    protected override bool Asserts => true;
+    protected override bool PassedExpectationsContains => true;
     protected override bool Report => false;
     protected override bool Explain => false;
 
@@ -61,23 +62,24 @@ public class ContactManagerAcceptanceTests : WebrRunTest<ContactManagerAcceptanc
         Assert.Equal(16, article.Total().PassedExpectations());
         var findings = article.Record as Findings;
         Assert.NotNull(findings);
-        var passedExpectations = findings.PassedExpectationDepositions.Select(a => a.Label).ToList();
-        Assert.Contains("'Create Contact' Status Code is Success", passedExpectations);
-        Assert.Contains("'Create Contact' Response", passedExpectations);
-        Assert.Contains("'Create Contact' Name", passedExpectations);
-        Assert.Contains("'Update Contact' Status Code is Success", passedExpectations);
-        Assert.Contains("'Update Contact' Name", passedExpectations);
-        Assert.Contains("'Update Contact' Not Found, Status Code", passedExpectations);
-        Assert.Contains("'Search Contacts' Status Code is Success", passedExpectations);
-        Assert.Contains("'Search Contacts' Response", passedExpectations);
-        Assert.Contains("'Search Contacts' Contains Stored Contact", passedExpectations);
-        Assert.Contains("'Search Contacts' Empty List, Status Code", passedExpectations);
-        Assert.Contains("'Delete Contact' Status Code is Success", passedExpectations);
-        Assert.Contains("'Delete Contact' Deleted", passedExpectations);
-        Assert.Contains("'Delete Contact' Not Found, Status Code", passedExpectations);
-        Assert.Contains("'Get Contacts' Status Code is Success", passedExpectations);
-        Assert.Contains("'Get Contacts' Response", passedExpectations);
-        Assert.Contains("'Get Contacts' Contains All Stored Contacts", passedExpectations);
+        var passedExpectationLabels = article.PassedExpectationLabels();
+        Assert.Equal(16, passedExpectationLabels.Count);
+        Assert.Contains("'Create Contact' Status Code is Success", passedExpectationLabels);
+        Assert.Contains("'Create Contact' Response", passedExpectationLabels);
+        Assert.Contains("'Create Contact' Name", passedExpectationLabels);
+        Assert.Contains("'Update Contact' Status Code is Success", passedExpectationLabels);
+        Assert.Contains("'Update Contact' Name", passedExpectationLabels);
+        Assert.Contains("'Update Contact' Not Found, Status Code", passedExpectationLabels);
+        Assert.Contains("'Search Contacts' Status Code is Success", passedExpectationLabels);
+        Assert.Contains("'Search Contacts' Response", passedExpectationLabels);
+        Assert.Contains("'Search Contacts' Contains Stored Contact", passedExpectationLabels);
+        Assert.Contains("'Search Contacts' Empty List, Status Code", passedExpectationLabels);
+        Assert.Contains("'Delete Contact' Status Code is Success", passedExpectationLabels);
+        Assert.Contains("'Delete Contact' Deleted", passedExpectationLabels);
+        Assert.Contains("'Delete Contact' Not Found, Status Code", passedExpectationLabels);
+        Assert.Contains("'Get Contacts' Status Code is Success", passedExpectationLabels);
+        Assert.Contains("'Get Contacts' Response", passedExpectationLabels);
+        Assert.Contains("'Get Contacts' Contains All Stored Contacts", passedExpectationLabels);
     }
 }
 

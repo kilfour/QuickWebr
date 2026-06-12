@@ -24,6 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\QuickWebr\QuickWebr.csproj" />
     <ProjectReference Include="..\ContactManager\ContactManager.csproj" />
+    <ProjectReference Include="..\HorsesForCourses.Api\HorsesForCourses.Api.csproj" />
   </ItemGroup>
   
   <ItemGroup>
