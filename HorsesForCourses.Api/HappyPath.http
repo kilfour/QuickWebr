@@ -1,0 +1,84 @@
+### auth
+POST http://localhost:5200/auth/token
+Content-Type: application/json
+
+{
+  "name": "Alice",
+  "email": "alice@example.com",
+  "password": "yep"
+}
+
+### Register Coach
+POST http://localhost:5200/coaches
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6InVzZXIuTmFtZSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJ1c2VyLkVtYWlsIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiYWRtaW4iLCJleHAiOjE3NzI2Mzc1MTYsImlzcyI6Imh0dHBzOi8vaGZjYy5leGFtcGxlIiwiYXVkIjoiaGZjYy1hcGkifQ.M9DZHSWwDiNq9jwGgBH7cgLuag_Zgl0aYkb_Vyb_vDw
+Content-Type: application/json
+
+{
+  "name": "Alice",
+  "email": "alice@example.com"
+}
+
+### Update Skills
+POST http://localhost:5200/coaches/1/skills
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6InVzZXIuTmFtZSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJ1c2VyLkVtYWlsIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiYWRtaW4iLCJleHAiOjE3NzI2Mzc1MTYsImlzcyI6Imh0dHBzOi8vaGZjYy5leGFtcGxlIiwiYXVkIjoiaGZjYy1hcGkifQ.M9DZHSWwDiNq9jwGgBH7cgLuag_Zgl0aYkb_Vyb_vDw
+Content-Type: application/json
+
+{
+  "skills": ["C#", "LINQ"]
+}
+
+### Get Coaches
+GET http://localhost:5200/coaches
+
+### Get Coach By Id
+GET http://localhost:5200/coaches/1/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6InVzZXIuTmFtZSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJ1c2VyLkVtYWlsIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiYWRtaW4iLCJleHAiOjE3NzI2Mzc1MTYsImlzcyI6Imh0dHBzOi8vaGZjYy5leGFtcGxlIiwiYXVkIjoiaGZjYy1hcGkifQ.M9DZHSWwDiNq9jwGgBH7cgLuag_Zgl0aYkb_Vyb_vDw
+
+
+### Create Course
+POST http://localhost:5200/courses
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6InVzZXIuTmFtZSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJ1c2VyLkVtYWlsIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiYWRtaW4iLCJleHAiOjE3NzI2Mzc1MTYsImlzcyI6Imh0dHBzOi8vaGZjYy5leGFtcGxlIiwiYXVkIjoiaGZjYy1hcGkifQ.M9DZHSWwDiNq9jwGgBH7cgLuag_Zgl0aYkb_Vyb_vDw
+Content-Type: application/json
+
+{
+  "name": "Advanced C#",
+  "startDate": "2025-09-01",
+  "endDate": "2025-09-05"
+}
+
+### Update Required Skills
+POST http://localhost:5200/courses/1/skills
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6InVzZXIuTmFtZSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJ1c2VyLkVtYWlsIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiYWRtaW4iLCJleHAiOjE3NzI2Mzc1MTYsImlzcyI6Imh0dHBzOi8vaGZjYy5leGFtcGxlIiwiYXVkIjoiaGZjYy1hcGkifQ.M9DZHSWwDiNq9jwGgBH7cgLuag_Zgl0aYkb_Vyb_vDw
+Content-Type: application/json
+
+["C#", "LINQ"]
+
+### Update TimeSlots
+POST http://localhost:5200/courses/1/timeslots
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6InVzZXIuTmFtZSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJ1c2VyLkVtYWlsIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiYWRtaW4iLCJleHAiOjE3NzI2Mzc1MTYsImlzcyI6Imh0dHBzOi8vaGZjYy5leGFtcGxlIiwiYXVkIjoiaGZjYy1hcGkifQ.M9DZHSWwDiNq9jwGgBH7cgLuag_Zgl0aYkb_Vyb_vDw
+Content-Type: application/json
+
+[
+    { "day": "Monday", "start": 9, "end": 12 },
+    { "day": "Tuesday", "start": 13, "end": 17 }
+]
+
+### Confirm Course
+POST http://localhost:5200/courses/1/confirm
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6InVzZXIuTmFtZSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJ1c2VyLkVtYWlsIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiYWRtaW4iLCJleHAiOjE3NzI2Mzc1MTYsImlzcyI6Imh0dHBzOi8vaGZjYy5leGFtcGxlIiwiYXVkIjoiaGZjYy1hcGkifQ.M9DZHSWwDiNq9jwGgBH7cgLuag_Zgl0aYkb_Vyb_vDw
+
+### Assign Coach
+POST http://localhost:5200/courses/1/assign-coach
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6InVzZXIuTmFtZSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJ1c2VyLkVtYWlsIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiYWRtaW4iLCJleHAiOjE3NzI2Mzc1MTYsImlzcyI6Imh0dHBzOi8vaGZjYy5leGFtcGxlIiwiYXVkIjoiaGZjYy1hcGkifQ.M9DZHSWwDiNq9jwGgBH7cgLuag_Zgl0aYkb_Vyb_vDw
+Content-Type: application/json
+
+{ "coachId": 1 }
+
+### Get Courses
+GET http://localhost:5200/courses
+
+### Get Course Detail
+GET http://localhost:5200/courses/1
+
+
+
