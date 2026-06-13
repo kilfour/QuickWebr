@@ -1,12 +1,10 @@
 using HorsesForCourses.Abstractions;
 using HorsesForCourses.Api.Coaches;
 using HorsesForCourses.Api.Courses;
-using HorsesForCourses.Api.Service.Warehouse;
 using HorsesForCourses.Domain.Coaches;
 using HorsesForCourses.Domain.Courses;
 using HorsesForCourses.Domain.Courses.TimeSlots;
 using HorsesForCourses.Domain.Skills;
-using Microsoft.EntityFrameworkCore;
 using QuickCheckr;
 using QuickCheckr.Diagnostics;
 using QuickCheckr.UnderTheHood;
@@ -29,8 +27,8 @@ namespace QuickWebr.Tests.HorsesForCoursesTests;
 [DocExample(typeof(CreateCourse))]
 [DocExample(typeof(UpdateCourseSkills))]
 [DocExample(typeof(UpdateTimeSlots))]
-[DocExample(typeof(UpdateCoachSkills))]
 [DocExample(typeof(ConfirmCourse))]
+[DocExample(typeof(AssignCoachToCourse))]
 [DocBoldHeader("Helpers")]
 [DocExample(typeof(Skills))]
 [DocReportHeader]
@@ -44,9 +42,9 @@ public class HorsesForCoursesAcceptanceTests : WebrRunTest<HorsesForCoursesAccep
 
     [Fact]
     public void Example() =>
-        Document(a => a.Run(5.Runs(), 20.ExecutionsPerRun()), _ => { });
+        Document(a => a.Run(4.Runs(), 25.ExecutionsPerRun()), _ => { });
 
-    [Fact]
+    [Fact(Skip = "debug")]
     public void Debug() =>
         Webr.Named("Horses for Courses")
             .Context(() => new WebrApplicationFactory())
@@ -57,7 +55,7 @@ public class HorsesForCoursesAcceptanceTests : WebrRunTest<HorsesForCoursesAccep
                 new CreateCourse(),
                 new UpdateCourseSkills());
 
-    [Fact]
+    [Fact(Skip = "debug")]
     public void Autopsy() =>
         GetWebr().Autopsy(1750761734, 20.ExecutionsPerRun(), AutopsyProbe.StartsWith("ActionShrinking"));
 
@@ -74,8 +72,8 @@ public class HorsesForCoursesAcceptanceTests : WebrRunTest<HorsesForCoursesAccep
                 new CreateCourse(),
                 new UpdateCourseSkills(),
                 new UpdateTimeSlots(),
-                new AssignCoachToCourse(),
-                new ConfirmCourse());
+                new ConfirmCourse(),
+                new AssignCoachToCourse());
 }
 
 [CodeExample]
@@ -185,12 +183,25 @@ public class UpdateTimeSlots : ApiMethod<EfReader>
 }
 
 [CodeExample]
+public class ConfirmCourse : ApiMethod<EfReader>
+{
+    public override Specification<EfReader> Define() =>
+        Update("Confirm Course")
+            .When<CourseInfo>(info => info.HasTimeSlots && !info.IsConfirmed)
+            .Route(a => a.Id, a => $"/courses/{a}/confirm")
+            .Send()
+            .Store((course) => course with { IsConfirmed = true })
+            .ReadBack((reader, info) => reader.Query(db => db.Find<Course>(Id<Course>.From(info.Id))))
+            .Expect(("Confirmed", (course) => course.IsConfirmed));
+}
+
+[CodeExample]
 public class AssignCoachToCourse : ApiMethod<EfReader>
 {
     public override Specification<EfReader> Define() =>
-        Update("/courses/{id}/assign-coach")
+        Update("Assign Coach to Course")
             .When<CourseInfo, CoachInfo>(
-                (course, coach) => course.IsConfirmed)// && IsSuitableFor(course, coach))
+                (reader, course, coach) => course.IsConfirmed && IsSuitableFor(reader, course, coach))
             .Route((course, coach) => course.Id, a => $"/courses/{a}/assign-coach")
             .Send((course, coach) => new AssignCoachRequest(coach.Id))
             .Store((course, coach, request) => course)
@@ -202,28 +213,15 @@ public class AssignCoachToCourse : ApiMethod<EfReader>
                     course.AssignedCoach == coach &&
                     coach.AssignedCourses.Contains(course)));
 
-    // private static bool IsSuitableFor(IDbAccess db, CourseInfo courseInfo, CoachInfo coachInfo)
-    // {
-    //     var course = db.Query(ctx => ctx.Find<Course>(Id<Course>.From(courseInfo.Id))!);
-    //     if (course == null) return false;
-    //     if (course.AssignedCoach != null) return false;
-    //     var coach = db.Query(ctx => ctx.Find<Coach>(Id<Coach>.From(coachInfo.Id))!);
-    //     if (coach == null) return false;
-    //     return coach.IsSuitableFor(course);
-    // }
-}
-
-[CodeExample]
-public class ConfirmCourse : ApiMethod<EfReader>
-{
-    public override Specification<EfReader> Define() =>
-        Update("Confirm Course")
-            .When<CourseInfo>(info => info.HasTimeSlots && !info.IsConfirmed)
-            .Route(a => a.Id, a => $"/courses/{a}/confirm")
-            .Send()
-            .Store((course) => course with { IsConfirmed = true })
-            .ReadBack((reader, info) => reader.Query(db => db.Find<Course>(Id<Course>.From(info.Id))))
-            .Expect(("Confirmed", (course) => course.IsConfirmed));
+    private static bool IsSuitableFor(EfReader reader, CourseInfo courseInfo, CoachInfo coachInfo)
+    {
+        var course = reader.Query(ctx => ctx.Find<Course>(Id<Course>.From(courseInfo.Id))!);
+        if (course == null) return false;
+        if (course.AssignedCoach != null) return false;
+        var coach = reader.Query(ctx => ctx.Find<Coach>(Id<Coach>.From(coachInfo.Id))!);
+        if (coach == null) return false;
+        return coach.IsSuitableFor(course);
+    }
 }
 
 

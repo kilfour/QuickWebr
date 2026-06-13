@@ -5,7 +5,7 @@ namespace QuickWebr.Bolts.UpdateBuilders.MultiplePools;
 public class UpdateStore<TReader, TPoolElementOne, TPoolElementTwo, TRequest, TRouteId>(
     string name,
     HttpMethod httpMethod,
-    Func<TPoolElementOne, TPoolElementTwo, bool> predicate,
+    Func<TReader, TPoolElementOne, TPoolElementTwo, bool> predicate,
     Func<TPoolElementOne, TPoolElementTwo, FuzzrOf<TRequest>> fuzzrFactory,
     Func<TPoolElementOne, TPoolElementTwo, TRouteId> getRouteId,
     Func<TRouteId, string> routeFactory)

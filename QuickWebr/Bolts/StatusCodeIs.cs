@@ -30,12 +30,12 @@ public static class StatusCodeIs
 
     private static List<string> GetProblem(HttpResponseMessage response)
     {
-        var problem = response.ReadValidationProblemAsync().GetAwaiter().GetResult();
-        if (problem is not null)
-        {
-            return [.. problem.Errors.SelectMany(kv =>
-                kv.Value.Select(error => $"{kv.Key}: {error}"))];
-        }
+        // var problem = response.ReadValidationProblemAsync().GetAwaiter().GetResult();
+        // if (problem is not null)
+        // {
+        //     return [.. problem.Errors.SelectMany(kv =>
+        //         kv.Value.Select(error => $"{kv.Key}: {error}"))];
+        // }
         // if (response.Content.Headers.ContentType?.MediaType != "application/problem+json")
         //     return null;
         return [response.Content.ReadAsStringAsync().GetAwaiter().GetResult()];

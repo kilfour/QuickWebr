@@ -1,5 +1,4 @@
 using System.Net;
-using ContactManager.Api;
 using ContactManager.Core.CreateContact;
 using ContactManager.Core.GetAll;
 using ContactManager.Core.Search;
@@ -11,7 +10,6 @@ using QuickCheckr.FilingCabinet;
 using QuickCheckr.UnderTheHood;
 using QuickFuzzr;
 using QuickPulse.Explains;
-using QuickWebr.Bolts.WebrBuilders;
 using QuickWebr.Tests.Tools;
 
 

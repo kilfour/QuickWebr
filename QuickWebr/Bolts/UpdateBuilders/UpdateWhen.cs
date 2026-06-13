@@ -12,6 +12,9 @@ public class UpdateWhen<TReader>(string name, HttpMethod httpMethod)
 
     public UpdateRoute<TReader, TPoolElementOne, TPoolElementTwo> When<TPoolElementOne, TPoolElementTwo>(
         Func<TPoolElementOne, TPoolElementTwo, bool> predicate)
+            => new(name, httpMethod, (r, a, b) => predicate(a, b));
+
+    public UpdateRoute<TReader, TPoolElementOne, TPoolElementTwo> When<TPoolElementOne, TPoolElementTwo>(
+        Func<TReader, TPoolElementOne, TPoolElementTwo, bool> predicate)
             => new(name, httpMethod, predicate);
 }
-

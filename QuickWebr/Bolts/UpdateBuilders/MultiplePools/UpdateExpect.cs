@@ -7,7 +7,7 @@ namespace QuickWebr.Bolts.UpdateBuilders.MultiplePools;
 public class UpdateExpect<TReader, TPoolElementOne, TPoolElementTwo, TRequest, TRouteId, TDbValueOne, TDbValueTwo>(
     string name,
     HttpMethod httpMethod,
-    Func<TPoolElementOne, TPoolElementTwo, bool> predicate,
+    Func<TReader, TPoolElementOne, TPoolElementTwo, bool> predicate,
     Func<TPoolElementOne, TPoolElementTwo, FuzzrOf<TRequest>> fuzzrFactory,
     Func<TPoolElementOne, TPoolElementTwo, TRouteId> getRouteId,
     Func<TRouteId, string> routeFactory,
@@ -50,7 +50,7 @@ public class UpdateExpect<TReader, TPoolElementOne, TPoolElementTwo, TRequest, T
         params (string label, Func<TRequest, TDbValueOne, TDbValueTwo, bool> expectation)[] expectations)
     {
         return (client, db) =>
-            Trackr.PoolWhen<TPoolElementOne, TPoolElementTwo>(name, predicate, (elementOne, elementTwo) =>
+            Trackr.PoolWhen<TPoolElementOne, TPoolElementTwo>(name, (a, b) => predicate(db, a, b), (elementOne, elementTwo) =>
                 from route in Checkr.Capture(() => routeFactory(getRouteId(elementOne.Value, elementTwo.Value)))
                 from traceRoute in Checkr.Trace("Route", () => route)
                 from request in Checkr.Input($"'{name}' Request", fuzzrFactory(elementOne.Value, elementTwo.Value))

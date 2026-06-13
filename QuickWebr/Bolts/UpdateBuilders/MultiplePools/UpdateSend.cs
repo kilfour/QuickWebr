@@ -5,7 +5,7 @@ namespace QuickWebr.Bolts.UpdateBuilders.MultiplePools;
 public class UpdateSend<TReader, TPoolElementOne, TPoolElementTwo, TRouteId>(
     string name,
     HttpMethod httpMethod,
-    Func<TPoolElementOne, TPoolElementTwo, bool> predicate,
+    Func<TReader, TPoolElementOne, TPoolElementTwo, bool> predicate,
     Func<TPoolElementOne, TPoolElementTwo, TRouteId> getRouteId,
     Func<TRouteId, string> routeFactory)
 {
