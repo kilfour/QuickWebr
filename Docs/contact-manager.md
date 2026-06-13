@@ -1,4 +1,4 @@
-# Contact Manager Acceptance Tests
+# ContactManager Acceptance Tests
 
 **WebApplicationFactory:**  
 ```csharp
@@ -83,7 +83,7 @@ public class SearchContacts : ApiMethod<IContactRepository>
         Get("Search Contacts")
             .When<ContactInfo>(a => a.Count > 0)
             .Route("api/contacts/search")
-            .SendQuery(info => ("name", Fuzzr.Constant(info.Name)))
+            .SendQuery(info => ("name", info.Name))
             .ResponseIs<IReadOnlyList<SearchContactResponse>>()
             .When("Empty List", info => ("name", "nope-not-here"), (response, info) => !response.Any())
             .Expect("Contains Stored Contact",

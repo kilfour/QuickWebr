@@ -1,88 +1,73 @@
-using HorsesForCourses.Abstractions;
-using HorsesForCourses.Api.Coaches;
-using HorsesForCourses.Api.Courses;
-using HorsesForCourses.Domain.Coaches;
-using HorsesForCourses.Domain.Courses;
-using HorsesForCourses.Domain.Courses.TimeSlots;
-using HorsesForCourses.Domain.Skills;
-using QuickCheckr;
-using QuickCheckr.Diagnostics;
-using QuickCheckr.UnderTheHood;
-using QuickFuzzr;
-using QuickPulse.Explains;
-using QuickWebr.Tests.Tools;
-using WibblyWobbly;
+# ContactManager Acceptance Tests
 
-namespace QuickWebr.Tests.HorsesForCoursesTests;
-
-[DocFile]
-[DocFileHeader("ContactManager Acceptance Tests")]
-[DocBoldHeader("WebApplicationFactory")]
-[DocExample(typeof(WebrApplicationFactory))]
-[DocWebrHeader]
-[DocWebr]
-[DocMethodsHeader]
-[DocExample(typeof(CreateCoach))]
-[DocExample(typeof(UpdateCoachSkills))]
-[DocExample(typeof(CreateCourse))]
-[DocExample(typeof(UpdateCourseSkills))]
-[DocExample(typeof(UpdateTimeSlots))]
-[DocExample(typeof(ConfirmCourse))]
-[DocExample(typeof(AssignCoachToCourse))]
-[DocBoldHeader("Helpers")]
-[DocExample(typeof(Skills))]
-[DocReportHeader]
-[DocReport]
-public class HorsesForCoursesAcceptanceTests : WebrRunTest<HorsesForCoursesAcceptanceTests>
+**WebApplicationFactory:**  
+```csharp
+public class WebrApplicationFactory
+    : WebApplicationFactory<HorsesForCourses.Api.Program>
 {
-    protected override bool Asserts => false;
-    protected override bool PassedExpectationsContains => false;
-    protected override bool Report => false;
-    protected override bool Explain => false;
-
-    [Fact]
-    public void Example() =>
-        Document(a => a.Run(1211418307, 50.ExecutionsPerRun()), _ => { });
-
-    [Fact(Skip = "debug")]
-    public void Debug() =>
-        Webr.Named("Horses for Courses")
-            .Context(() => new WebrApplicationFactory())
-            .Client(a => a.CreateClient())
-            .Authentication(a => a.HasBearerToken(), a => a.AuthenticateViaTokenEndpointAsync())
-            .Reader(a => a.GetReader())
-            .Scenario(
-                new CreateCourse(),
-                new UpdateCourseSkills());
-
-    [Fact(Skip = "debug")]
-    public void Autopsy() =>
-        GetWebr().Autopsy(1750761734, 20.ExecutionsPerRun(), AutopsyProbe.StartsWith("ActionShrinking"));
-
-    [CodeSnippet]
-    protected override ConfiguredCheckr GetWebr() =>
-        Webr.Named("Horses for Courses")
-            .Context(() => new WebrApplicationFactory())
-            .Client(a => a.CreateClient())
-            .Authentication(a => a.HasBearerToken(), a => a.AuthenticateViaTokenEndpointAsync())
-            .Reader(a => a.GetReader())
-            .Observe<CoachInfo>("All Assigned Coaches Must Be Suitable",
-                (reader, coachInfo) =>
-                {
-                    var coach = reader.Query(db => db.Find<Coach>(Id<Coach>.From(coachInfo.Id))!);
-                    return coach.AssignedCourses.All(course => coach.IsSuitableFor(course));
-                })
-            .Methods(
-                new CreateCoach(),
-                new UpdateCoachSkills(),
-                new CreateCourse(),
-                new UpdateCourseSkills(),
-                new UpdateTimeSlots(),
-                new ConfirmCourse(),
-                new AssignCoachToCourse());
+    private SqliteConnection connection = null!;
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.ConfigureServices(services =>
+        {
+            var descriptor = services.SingleOrDefault(
+                d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
+            if (descriptor != null)
+                services.RemoveAll<AppDbContext>();
+            connection = new SqliteConnection("DataSource=:memory:");
+            connection.Open();
+            services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlite(connection));
+            var sp = services.BuildServiceProvider();
+            using var scope = sp.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Database.EnsureCreated();
+        });
+        builder.ConfigureAppConfiguration((context, cfg) =>
+        {
+            var overrides = new Dictionary<string, string?>
+            {
+                ["Auth:JwtKey"] = "a-very-long-random-secret-string-change-me",
+                ["Auth:Issuer"] = "https://hfcc.example",
+                ["Auth:Audience"] = "hfcc-api",
+            };
+            cfg.AddInMemoryCollection(overrides);
+        });
+    }
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+        connection.Dispose();
+    }
+    public EfReader GetReader() => new(Services);
 }
+```
 
-[CodeExample]
+**The Webr:**  
+```csharp
+Webr.Named("Horses for Courses")
+    .Context(() => new WebrApplicationFactory())
+    .Client(a => a.CreateClient())
+    .Authentication(a => a.HasBearerToken(), a => a.AuthenticateViaTokenEndpointAsync())
+    .Reader(a => a.GetReader())
+    .Observe<CoachInfo>("All Assigned Coaches Must Be Suitable",
+        (reader, coachInfo) =>
+        {
+            var coach = reader.Query(db => db.Find<Coach>(Id<Coach>.From(coachInfo.Id))!);
+            return coach.AssignedCourses.All(course => coach.IsSuitableFor(course));
+        })
+    .Methods(
+        new CreateCoach(),
+        new UpdateCoachSkills(),
+        new CreateCourse(),
+        new UpdateCourseSkills(),
+        new UpdateTimeSlots(),
+        new ConfirmCourse(),
+        new AssignCoachToCourse());
+```
+
+**The Methods:**  
+```csharp
 public class CreateCoach : ApiMethod<EfReader>
 {
     public override Specification<EfReader> Define() =>
@@ -100,8 +85,8 @@ public class CreateCoach : ApiMethod<EfReader>
                  ("Name", (request, coach) => coach.Name.Value == request.Name),
                  ("Email", (request, coach) => coach.Email.Value == request.Email));
 }
-
-[CodeExample]
+```
+```csharp
 public class UpdateCoachSkills : ApiMethod<EfReader>
 {
     public override Specification<EfReader> Define() =>
@@ -117,8 +102,8 @@ public class UpdateCoachSkills : ApiMethod<EfReader>
             .Expect(
                 ("Skills", (request, coach) => Skills.Equal(request.Skills, coach.Skills)));
 }
-
-[CodeExample]
+```
+```csharp
 public class CreateCourse : ApiMethod<EfReader>
 {
     public override Specification<EfReader> Define() =>
@@ -138,8 +123,8 @@ public class CreateCourse : ApiMethod<EfReader>
                 ("Start Date", (request, course) => course.Period.Start == request.StartDate),
                 ("End Date", (request, course) => course.Period.End == request.EndDate));
 }
-
-[CodeExample]
+```
+```csharp
 public class UpdateCourseSkills : ApiMethod<EfReader>
 {
     public override Specification<EfReader> Define() =>
@@ -153,8 +138,8 @@ public class UpdateCourseSkills : ApiMethod<EfReader>
             .ReadBack((reader, info) => reader.Query(db => db.Find<Course>(Id<Course>.From(info.Id))))
             .Expect(("Skills", (request, course) => Skills.Equal(request, course.RequiredSkills)));
 }
-
-[CodeExample]
+```
+```csharp
 public class UpdateTimeSlots : ApiMethod<EfReader>
 {
     public override Specification<EfReader> Define() =>
@@ -165,18 +150,15 @@ public class UpdateTimeSlots : ApiMethod<EfReader>
             .Store((course, request) => course with { HasTimeSlots = true })
             .ReadBack((reader, info) => reader.Query(db => db.Find<Course>(Id<Course>.From(info.Id))))
             .Expect(("Timeslots", (request, course) => SlotsAreEqual(request, course.TimeSlots)));
-
     private static readonly FuzzrOf<List<TimeSlotRequest>> TimeSlotsFuzzr =
         from key in Fuzzr.Guid()
         from slots in TimeSlotFuzzr(key).Many(2, 5)
         select slots.ToList();
-
     private static FuzzrOf<TimeSlotRequest> TimeSlotFuzzr(object key) =>
         from day in Fuzzr.Enum<CourseDay>().Unique(key)
         from start in Fuzzr.Int(9, 17)
         from end in Fuzzr.Int(start + 1, 18)
         select new TimeSlotRequest(day, start, end);
-
     private static bool SlotsAreEqual(IEnumerable<TimeSlotRequest> expected, IEnumerable<TimeSlot> actual)
     {
         var expectedOrdered = expected.OrderBy(a => (a.Day, a.Start, a.End));
@@ -186,8 +168,8 @@ public class UpdateTimeSlots : ApiMethod<EfReader>
         return expectedOrdered.SequenceEqual(actualOrdered);
     }
 }
-
-[CodeExample]
+```
+```csharp
 public class ConfirmCourse : ApiMethod<EfReader>
 {
     public override Specification<EfReader> Define() =>
@@ -199,8 +181,8 @@ public class ConfirmCourse : ApiMethod<EfReader>
             .ReadBack((reader, info) => reader.Query(db => db.Find<Course>(Id<Course>.From(info.Id))))
             .Expect(("Confirmed", (course) => course.IsConfirmed));
 }
-
-[CodeExample]
+```
+```csharp
 public class AssignCoachToCourse : ApiMethod<EfReader>
 {
     public override Specification<EfReader> Define() =>
@@ -217,7 +199,6 @@ public class AssignCoachToCourse : ApiMethod<EfReader>
                 ("Coach is assigned", (request, course, coach) =>
                     course.AssignedCoach == coach &&
                     coach.AssignedCourses.Contains(course)));
-
     private static bool IsSuitableFor(EfReader reader, CourseInfo courseInfo, CoachInfo coachInfo)
     {
         var course = reader.Query(ctx => ctx.Find<Course>(Id<Course>.From(courseInfo.Id))!);
@@ -228,9 +209,10 @@ public class AssignCoachToCourse : ApiMethod<EfReader>
         return coach.IsSuitableFor(course);
     }
 }
+```
 
-
-[CodeExample]
+**Helpers:**  
+```csharp
 public static class Skills
 {
     public static readonly string[] Pool =
@@ -239,7 +221,6 @@ public static class Skills
         "DomainDrivenDesign", "UnitTesting", "Git", "CI/CD",
         "JavaScript", "React", "Elm", "Architecture"
     ];
-
     public static bool Equal(IEnumerable<string> expected, IEnumerable<Skill> actual)
     {
         var expectedOrdered = expected.Order();
@@ -247,3 +228,79 @@ public static class Skills
         return expectedOrdered.SequenceEqual(actualOrdered);
     }
 }
+```
+
+**The Report:**  
+```text
+------------------------------------------------------------
+ Test:                    Example
+ Location:                HorsesForCoursesAcceptanceTests.cs:45:1
+ Original failing run:    48 executions
+ Minimal failing case:    8 executions (after 52 shrinks)
+ Seed:                    1211418307
+ ------------------------------------------------------------
+  Executed: Create Coach
+   - 'Create Coach' to Pool = CoachInfo-1
+   - 'Create Coach' Request = { Name: "uesayjtr", Email: "xm" }
+   - Route                  = /coaches
+ ------------------------------------------------------------
+  Executed: Create Course
+   - 'Create Course' to Pool = CourseInfo-1
+   - 'Create Course' Request = { Name: "xydhkh", StartDate: 22.August(2026), EndDate: 17.September(2026) }
+   - Route                   = /courses
+ ------------------------------------------------------------
+  Executed: Update Course Skills
+   - Update Course Skills           = CourseInfo-1
+   - 'Update Course Skills' Request = [ "UnitTesting" ]
+   - Route                          = /courses/1/skills
+ ------------------------------------------------------------
+  Executed: Update Time Slots
+   - Update Time Slots           = CourseInfo-1
+   - 'Update Time Slots' Request = [ { Start: 11, End: 12 } ]
+   - Route                       = /courses/1/timeslots
+ ------------------------------------------------------------
+  Executed: Confirm Course
+   - Confirm Course = CourseInfo-1
+   - Route          = /courses/1/confirm
+ ------------------------------------------------------------
+  Executed: Update Coach Skills
+   - Update Coach Skills           = CoachInfo-1
+   - 'Update Coach Skills' Request = { Skills: [ "UnitTesting" ] }
+   - Route                         = /coaches/1/skills
+ ------------------------------------------------------------
+  Executed: Assign Coach to Course
+   - Assign Coach to Course           = ( CourseInfo-1, CoachInfo-1 )
+   - 'Assign Coach to Course' Request = { CoachId: 1 }
+   - Route                            = /courses/1/assign-coach
+ ------------------------------------------------------------
+  Executed: Update Coach Skills
+   - Update Coach Skills = CoachInfo-1
+   - Route               = /coaches/1/skills
+   - WARNING: All inputs were considered irrelevant.
+ ================================================================
+  !! Expectation Failed: All Assigned Coaches Must Be Suitable
+       CoachInfo-1
+ ================================================================
+ Passed Expectations
+ - 'Create Coach' Status Code is Success: 6x
+ - 'Create Coach' Response: 6x
+ - 'Create Coach' Name: 6x
+ - 'Create Coach' Email: 6x
+ - All Assigned Coaches Must Be Suitable: 47x
+ - 'Create Course' Status Code is Success: 3x
+ - 'Create Course' Response: 3x
+ - 'Create Course' Name: 3x
+ - 'Create Course' Start Date: 3x
+ - 'Create Course' End Date: 3x
+ - 'Update Course Skills' Status Code is Success: 4x
+ - 'Update Course Skills' Skills: 4x
+ - 'Update Time Slots' Status Code is Success: 4x
+ - 'Update Time Slots' Timeslots: 4x
+ - 'Confirm Course' Status Code is Success: 3x
+ - 'Confirm Course' Confirmed: 3x
+ - 'Update Coach Skills' Status Code is Success: 27x
+ - 'Update Coach Skills' Skills: 27x
+ - 'Assign Coach to Course' Status Code is Success: 1x
+ - 'Assign Coach to Course' Coach is assigned: 1x
+ ------------------------------------------------------------
+```

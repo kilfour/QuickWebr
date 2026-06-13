@@ -1,6 +1,4 @@
-using QuickWebr.Bolts.WebrBuilders;
-
-namespace QuickWebr;
+namespace QuickWebr.Bolts.WebrBuilders;
 
 public class WebrClient<T>(string name, Func<T> contextFactory, Func<T, HttpClient> clientFactory)
 {

@@ -1,4 +1,4 @@
-namespace QuickWebr;
+namespace QuickWebr.Bolts.WebrBuilders;
 
 public class WebrNamed(string name)
 {

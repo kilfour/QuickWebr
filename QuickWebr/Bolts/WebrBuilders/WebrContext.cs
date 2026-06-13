@@ -1,3 +1,5 @@
+using QuickWebr.Bolts.WebrBuilders;
+
 namespace QuickWebr;
 
 public class WebrContext<T>(string name, Func<T> contextFactory)

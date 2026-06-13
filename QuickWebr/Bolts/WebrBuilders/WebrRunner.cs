@@ -4,9 +4,6 @@ using QuickCheckr.UnderTheHood;
 
 namespace QuickWebr.Bolts.WebrBuilders;
 
-
-
-
 public class WebrRunner<TContext, TReader>
 {
     private Func<CheckrConfig, CheckrConfig> configure;
@@ -49,18 +46,18 @@ public class WebrRunner<TContext, TReader>
         return TheCheckr().Configure(configure);
     }
 
-    //private readonly List<Func<IDbAccess, CheckrOf<Case>>> invariants = [];
+    private readonly List<Func<TReader, CheckrOf<Case>>> invariants = [];
     private readonly Func<TContext> contextFactory;
     private readonly Func<TContext, HttpClient> clientFactory;
     private readonly Func<HttpClient, bool> isAuthenticated;
     private readonly Func<HttpClient, Task> authenticate;
     private readonly Func<TContext, TReader> readBackFactory;
 
-    // public WebrRunner<TContext, TReader> ForAll<T>(string label, Func<IDbAccess, T, bool> expectation)
-    // {
-    //     invariants.Add(a => Trackr.PoolExpectEach<T>(label, b => expectation(a, b)));
-    //     return this;
-    // }
+    public WebrRunner<TContext, TReader> Observe<TPoolElement>(string label, Func<TReader, TPoolElement, bool> expectation)
+    {
+        invariants.Add(a => Trackr.PoolExpectEach<TPoolElement>(label, b => expectation(a, b)));
+        return this;
+    }
 
     // public Webr<TContext> DisableWarnings()
     // {
@@ -76,10 +73,10 @@ public class WebrRunner<TContext, TReader>
     private CheckrOf<Case> TheCheckr() =>
         from context in Trackr.Stashed(() => contextFactory())
         from client in Trackr.Stashed(() => clientFactory(context))
-        from db in Trackr.Stashed(() => readBackFactory(context))
+        from reader in Trackr.Stashed(() => readBackFactory(context))
         from auth in Checkr.ActWhen("Auth", () => !isAuthenticated(client), () => authenticate(client))
-        from _ in Checkr.OneOfWhen([.. methods.Select(m => m.Define().Checkr(client, db))])
-            // from invariants in Combine.Checkrs(invariants.Select(a => a(api)))
+        from _ in Checkr.OneOfWhen([.. methods.Select(m => m.Define().Checkr(client, reader))])
+        from invariants in Combine.Checkrs(invariants.Select(a => a(reader)))
         select Case.Closed;
 
     public void Scenario(params ApiMethod<TReader>[] methods)
