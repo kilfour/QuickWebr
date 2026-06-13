@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 
 namespace QuickWebr.Bolts;
 
-public static class Send<TPoolElement, TRequest>
+public static class Send<TRequest>
 {
     public static Task<HttpResponseMessage> Request(
         HttpClient client,
@@ -19,7 +19,7 @@ public static class Send<TPoolElement, TRequest>
 }
 
 
-public static class Send<TPoolElement>
+public static class Send
 {
     public static Task<HttpResponseMessage> Request(
         HttpClient client,
@@ -28,6 +28,8 @@ public static class Send<TPoolElement>
             => httpMethod.Method switch
             {
                 "GET" => client.GetAsync(route),
+                "POST" => client.PostAsync(route, null),
+                "PUT" => client.PutAsync(route, null),
                 "DELETE" => client.DeleteAsync(route),
                 _ => throw new NotSupportedException()
             };

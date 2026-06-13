@@ -12,4 +12,3 @@ public class UpdateStore<TReader, TPoolElement, TRequest, TRouteId>(
         Func<TPoolElement, TRequest, TPoolElement> update)
             => new(name, httpMethod, poolCondition, requestInfo, getRouteId, routeFactory, update);
 }
-

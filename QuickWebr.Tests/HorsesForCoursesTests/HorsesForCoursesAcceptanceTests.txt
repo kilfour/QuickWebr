@@ -1,0 +1,58 @@
+ ------------------------------------------------------------
+ Test:                    Example
+ Location:                HorsesForCoursesAcceptanceTests.cs:47:1
+ Original failing run:    10 executions
+ Minimal failing case:    6 executions (after 19 shrinks)
+ Seed:                    1750761734
+ ------------------------------------------------------------
+  Executed:
+   - 'Create Course' to Pool = CourseInfo-1
+   - Route                   = /courses
+   - WARNING: All inputs were considered irrelevant.
+ ------------------------------------------------------------
+  Executed: Update Time Slots
+   - Update Time Slots = CourseInfo-1
+   - Route             = /courses/0/timeslots
+   - WARNING: All inputs were considered irrelevant.
+ ------------------------------------------------------------
+  Executed:
+   - Update Course Skills = CourseInfo-1
+   - Route                = /courses/0/skills
+   - WARNING: All inputs were considered irrelevant.
+ ------------------------------------------------------------
+  Executed: Confirm Course
+   - Confirm Course = CourseInfo-1
+   - Route          = /courses/0/confirm
+ ------------------------------------------------------------
+  Executed:
+   - 'Create Coach' to Pool = CoachInfo-1
+   - Route                  = /coaches
+   - WARNING: All inputs were considered irrelevant.
+ ------------------------------------------------------------
+  Executed: /courses/{id}/assign-coach
+   - /courses/{id}/assign-coach = ( CourseInfo-1, CoachInfo-1 )
+   - Route                      = /courses/0/assign-coach
+   - WARNING: All inputs were considered irrelevant.
+ ==============================================================================
+  !! Expectation Failed: '/courses/{id}/assign-coach' Status Code is Success
+       BadRequest
+ ==============================================================================
+ Passed Expectations
+ - 'Create Course' Status Code is Success: 2x
+ - 'Create Course' Response: 2x
+ - 'Create Course' Name: 2x
+ - 'Create Course' Start Date: 2x
+ - 'Create Course' End Date: 2x
+ - 'Update Time Slots' Status Code is Success: 2x
+ - 'Update Time Slots' Timeslots: 2x
+ - 'Update Course Skills' Status Code is Success: 2x
+ - 'Update Course Skills' Skills: 2x
+ - 'Confirm Course' Status Code is Success: 1x
+ - 'Confirm Course' Confirmed: 1x
+ - 'Create Coach' Status Code is Success: 1x
+ - 'Create Coach' Response: 1x
+ - 'Create Coach' Name: 1x
+ - 'Create Coach' Email: 1x
+ - 'Update Coach Skills' Status Code is Success: 1x
+ - 'Update Coach Skills' Skills: 1x
+ ------------------------------------------------------------

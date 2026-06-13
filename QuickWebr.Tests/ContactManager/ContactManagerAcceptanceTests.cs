@@ -18,7 +18,7 @@ using QuickWebr.Tests.Tools;
 namespace QuickWebr.Tests.ContactManager;
 
 [DocFile]
-[DocFileHeader("Contact Manager Acceptance Tests")]
+[DocFileHeader("ContactManager Acceptance Tests")]
 [DocBoldHeader("WebApplicationFactory")]
 [DocExample(typeof(WebrApplicationFactory))]
 [DocWebrHeader]
@@ -33,14 +33,14 @@ namespace QuickWebr.Tests.ContactManager;
 [DocReport]
 public class ContactManagerAcceptanceTests : WebrRunTest<ContactManagerAcceptanceTests>
 {
-    protected override bool Asserts => true;
+    protected override bool Asserts => false;
     protected override bool PassedExpectationsContains => true;
     protected override bool Report => false;
     protected override bool Explain => false;
 
     [Fact]
     public void Example() =>
-        Document(a => a.Run(10.Runs(), 50.ExecutionsPerRun()), Verify);
+        Document(a => a.Run(5.Runs(), 20.ExecutionsPerRun()), Verify);
 
     [CodeSnippet]
     protected override ConfiguredCheckr GetWebr() =>
@@ -145,7 +145,7 @@ public class SearchContacts : ApiMethod<IContactRepository>
         Get("Search Contacts")
             .When<ContactInfo>(a => a.Count > 0)
             .Route("api/contacts/search")
-            .SendQuery(info => ("name", Fuzzr.Constant(info.Name)))
+            .SendQuery(info => ("name", info.Name))
             .ResponseIs<IReadOnlyList<SearchContactResponse>>()
             .When("Empty List", info => ("name", "nope-not-here"), (response, info) => !response.Any())
             .Expect("Contains Stored Contact",

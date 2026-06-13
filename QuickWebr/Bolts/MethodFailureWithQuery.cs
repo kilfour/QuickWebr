@@ -19,7 +19,7 @@ public class MethodFailureWithQuery<TPoolElement>(
             from actualRoute in Checkr.Capture(() => $"{route}?{query.Item1}={query.Item2}")
             from traceRout in Checkr.Trace($"{label} Route", () => actualRoute)
             from response in Checkr.ShrinkableAct(label,
-                () => Send<TPoolElement>.Request(
+                () => Send.Request(
                     client,
                     HttpMethod.Get,
                     actualRoute))
@@ -44,7 +44,7 @@ public class Alternate<TPoolElement, TResponse>(
             from actualRoute in Checkr.Capture(() => $"{route}?{query.Item1}={query.Item2}")
             from traceRout in Checkr.Trace($"{label} Route", () => actualRoute)
             from response in Checkr.ShrinkableAct(label,
-                () => Send<TPoolElement>.Request(
+                () => Send.Request(
                     client,
                     HttpMethod.Get,
                     actualRoute))

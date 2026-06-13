@@ -9,6 +9,7 @@ using HorsesForCourses.Api.Service.Courses;
 using HorsesForCourses.Api.Service.Courses.GetCourseById;
 using HorsesForCourses.Api.Service.Courses.GetCourseDetail;
 using HorsesForCourses.Api.Service.Courses.GetCourses;
+using HorsesForCourses.Api.Service.Coaches.UpdateSkills;
 
 namespace HorsesForCourses.Api.Service;
 
@@ -20,6 +21,7 @@ public static class BuilderExtensions
             .AddScoped<IAmASuperVisor, DataSupervisor>()
             .AddScoped<IGetCoachById, GetCoachById>()
             // === Coaches === 
+            .AddScoped<IGetCoachForSkillsUpdate, GetCoachForSkillsUpdate>()
             .AddScoped<IGetCoachSummaries, GetCoachSummaries>()
             .AddScoped<IGetCoachDetailQuery, GetCoachDetailQuery>()
             .AddScoped<ICoachesService, CoachesService>()

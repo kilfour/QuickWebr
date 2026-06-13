@@ -99,6 +99,6 @@ public class WebrRunner<TContext, TReader>
                     select Case.Closed)]
             )
             select Case.Closed;
-        checkr.Configure(configure).Run(1.Runs(), methods.Length.ExecutionsPerRun());
+        checkr.Configure(configure).Configure(a => a with { ShrinkMode = ShrinkMode.None }).Run(1.Runs(), methods.Length.ExecutionsPerRun());
     }
 }

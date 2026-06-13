@@ -17,7 +17,7 @@ public class MethodNoIdFailure<TPoolElement, TRequest>(
         from maybe in Checkr.When(() => flag.Value,
             from mutated in Checkr.Capture(() => mutate(request))
             from response in Checkr.ShrinkableAct(label, () =>
-                Send<TPoolElement, TRequest>.Request(client, httpMethod, route, mutated))
+                Send<TRequest>.Request(client, httpMethod, route, mutated))
             from checks in Checkr.Expect($"{label}, Status Code", () => response.Result.StatusCode == statusCode)
             from flip in Checkr.Perform(() => flag.Value = !flag.Value)
             select Case.Closed)
@@ -36,7 +36,7 @@ public class MethodFailure<TPoolElement, TRequest, TRouteId>(
         from maybe in Checkr.When(() => flag.Value,
             from tuple in Checkr.Capture(() => mutate(element, request))
             from response in Checkr.ShrinkableAct(label, () =>
-                Send<TPoolElement, TRequest>.Request(
+                Send<TRequest>.Request(
                         client,
                         httpMethod,
                         routeFactory(getRouteId(tuple.Item1)),
@@ -59,7 +59,7 @@ public class MethodFailure<TPoolElement, TRouteId>(
         from maybe in Checkr.When(() => flag.Value,
             from route in Checkr.Capture(() => routeFactory(getRouteId(mutate(element))))
             from response in Checkr.ShrinkableAct(label, () =>
-                Send<TPoolElement>.Request(client, httpMethod, route))
+                Send.Request(client, httpMethod, route))
             from checks in Checkr.Expect($"{label}, Status Code", () => response.Result.StatusCode == statusCode,
                 () => [$"   Route: {route}", $"Expected: {statusCode}", $"  Actual: {response.Result.StatusCode}"])
             from flip in Checkr.Perform(() => flag.Value = !flag.Value)

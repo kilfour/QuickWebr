@@ -12,7 +12,7 @@ namespace QuickWebr.Tests.HorsesForCoursesTests;
 
 [CodeExample]
 
-public class CustomWebApplicationFactory
+public class WebrApplicationFactory
     : WebApplicationFactory<HorsesForCourses.Api.Program>
 {
     private SqliteConnection connection = null!;
@@ -58,23 +58,15 @@ public class CustomWebApplicationFactory
         connection.Dispose();
     }
 
-    public EfReader GetReader()
+    public EfReader GetReader() => new(Services);
+}
+
+public sealed class EfReader(IServiceProvider services)
+{
+    public T Query<T>(Func<AppDbContext, T> query)
     {
-        var scope = Services.CreateScope();
-        return new EfReader(scope.ServiceProvider.GetRequiredService<AppDbContext>());
+        using var scope = services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        return query(db);
     }
 }
-
-public class EfReader(AppDbContext dbContext)
-{
-    public T? Find<T>(object id) where T : class
-        => dbContext.Find<T>(id);
-
-    // public TResult Query<TResult>(Func<TResult> query)
-    // {
-    //     throw new NotImplementedException();
-    // }
-
-    // public TResult Query<TResult>(Func<TResult> query) => 
-}
-

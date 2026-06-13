@@ -29,7 +29,7 @@ public class DeleteExpect<TReader, TPoolElement, TRouteId, TDbValue>(
                 from route in Checkr.Capture(() => routeFactory(getRouteId(element.Value)))
                 from traceRoute in Checkr.Trace("Route", () => route)
                 from response in Checkr.ShrinkableAct(name,
-                    () => Send<TPoolElement>.Request(
+                    () => Send.Request(
                         client,
                         httpMethod,
                         route))

@@ -35,6 +35,15 @@ public class UpdateExpect<TReader, TPoolElement, TRequest, TRouteId, TDbValue>(
         return this;
     }
 
+    private readonly List<(string TraceLabel, Func<TPoolElement, TRequest, TDbValue, object> Factory)> traces = [];
+    public UpdateExpect<TReader, TPoolElement, TRequest, TRouteId, TDbValue> Trace(
+        string traceLabel,
+        Func<TPoolElement, TRequest, TDbValue, object> factory)
+    {
+        traces.Add((traceLabel, factory));
+        return this;
+    }
+
     public Specification<TReader> Expect(params (string label, Func<TRequest, TDbValue, bool> expectation)[] expectations)
         => new(TheCheckr(expectations));
 
@@ -47,11 +56,13 @@ public class UpdateExpect<TReader, TPoolElement, TRequest, TRouteId, TDbValue>(
                 from traceRoute in Checkr.Trace("Route", () => route)
                 from request in Checkr.Input($"'{name}' Request", requestInfo.Fuzzr, requestInfo.GetShrinkers(element.Value))
                 from response in Checkr.ShrinkableAct(name,
-                    () => Send<TPoolElement, TRequest>.Request(client, httpMethod, route, request))
+                    () => Send<TRequest>.Request(client, httpMethod, route, request))
                 from guard in Checkr.When(() => response.HasExecuted,
                     from responseIsSuccess in StatusCodeIs.Success(name, response)
                     from stored in element.Replace(store(element.Value, request))
                     from reloaded in Checkr.Capture(() => read(db, element.Value))
+                    from traces in Combine.Checkrs(traces.Select(a =>
+                        Checkr.Trace($"'{name}' {a.TraceLabel}", () => a.Factory(element.Value, request, reloaded))))
                     from checks in Combine.Checkrs(expectations.Select(a =>
                         Checkr.Expect($"'{name}' {a.label}", () => a.expectation(request, reloaded))))
                     from failureChecks in Combine.Checkrs(
