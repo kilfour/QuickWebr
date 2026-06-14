@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using QuickCheckr.Authoring;
 using QuickCheckr.Authoring.ThePress;
 using QuickCheckr.Authoring.ThePress.Printing;
 using QuickCheckr.UnderTheHood;
@@ -8,16 +7,10 @@ using QuickPulse.Explains;
 
 namespace QuickWebr.Tests.Tools;
 
-public abstract class WebrRunTest<T> : QuickCheckrTest<T>
+public abstract class WebrTest<T> : WebrBaseTest<T>
 {
-    protected class DocWebrHeaderAttribute() :
-        DocBoldHeaderAttribute("The Webr");
-
     protected class DocWebrAttribute() :
         DocExampleAttribute(typeof(T), nameof(GetWebr));
-
-    protected class DocMethodsHeaderAttribute() :
-        DocBoldHeaderAttribute("The Methods");
 
     [StackTraceHidden]
     protected void Document(

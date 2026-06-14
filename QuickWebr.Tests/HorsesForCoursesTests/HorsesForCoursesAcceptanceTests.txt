@@ -1,6 +1,6 @@
  ------------------------------------------------------------
  Test:                    Example
- Location:                HorsesForCoursesAcceptanceTests.cs:45:1
+ Location:                HorsesForCoursesAcceptanceTests.cs:57:1
  Original failing run:    48 executions
  Minimal failing case:    8 executions (after 52 shrinks)
  Seed:                    1211418307

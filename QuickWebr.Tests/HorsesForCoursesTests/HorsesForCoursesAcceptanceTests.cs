@@ -10,6 +10,7 @@ using QuickCheckr.Diagnostics;
 using QuickCheckr.UnderTheHood;
 using QuickFuzzr;
 using QuickPulse.Explains;
+using QuickPulse.Show;
 using QuickWebr.Tests.Tools;
 using WibblyWobbly;
 
@@ -29,23 +30,36 @@ namespace QuickWebr.Tests.HorsesForCoursesTests;
 [DocExample(typeof(UpdateTimeSlots))]
 [DocExample(typeof(ConfirmCourse))]
 [DocExample(typeof(AssignCoachToCourse))]
+[DocBoldHeader("Invariant")]
+[DocExample(typeof(AssignedCoachesMustBeSuitable))]
 [DocBoldHeader("Helpers")]
+[DocExample(typeof(EfReader))]
 [DocExample(typeof(Skills))]
 [DocReportHeader]
 [DocReport]
-public class HorsesForCoursesAcceptanceTests : WebrRunTest<HorsesForCoursesAcceptanceTests>
+[DocHeader("Addendum: Free QuickCheckr functionality.")]
+[DocBoldHeader("Scenarios")]
+[DocExample(typeof(HorsesForCoursesAcceptanceTests), nameof(Scenario))]
+[DocBoldHeader("Investigating")]
+[DocExample(typeof(HorsesForCoursesAcceptanceTests), nameof(Conducting))]
+[DocBoldHeader("Cold Cases (Vault)")]
+[DocExample(typeof(HorsesForCoursesAcceptanceTests), nameof(ColdCases))]
+[DocBoldHeader("Diagnostics")]
+[DocExample(typeof(HorsesForCoursesAcceptanceTests), nameof(Autopsy))]
+public class HorsesForCoursesAcceptanceTests : WebrTest<HorsesForCoursesAcceptanceTests>
 {
     protected override bool Asserts => false;
     protected override bool PassedExpectationsContains => false;
     protected override bool Report => false;
     protected override bool Explain => false;
 
-    [Fact]
+    [Fact(Skip = "Explicit")]
     public void Example() =>
         Document(a => a.Run(1211418307, 50.ExecutionsPerRun()), _ => { });
 
     [Fact(Skip = "debug")]
-    public void Debug() =>
+    [CodeSnippet]
+    public void Scenario() =>
         Webr.Named("Horses for Courses")
             .Context(() => new WebrApplicationFactory())
             .Client(a => a.CreateClient())
@@ -56,8 +70,19 @@ public class HorsesForCoursesAcceptanceTests : WebrRunTest<HorsesForCoursesAccep
                 new UpdateCourseSkills());
 
     [Fact(Skip = "debug")]
+    [CodeSnippet]
     public void Autopsy() =>
         GetWebr().Autopsy(1750761734, 20.ExecutionsPerRun(), AutopsyProbe.StartsWith("ActionShrinking"));
+
+    [Fact(Skip = "debug")]
+    [CodeSnippet]
+    public void Conducting() =>
+        GetWebr().Conduct(5.Investigations(), 2.Runs(), 20.ExecutionsPerRun());
+
+    [Fact(Skip = "debug")]
+    [CodeSnippet]
+    public void ColdCases() =>
+        GetWebr().ReviewColdCases().Run(3.Runs(), 25.ExecutionsPerRun());
 
     [CodeSnippet]
     protected override ConfiguredCheckr GetWebr() =>
@@ -66,12 +91,6 @@ public class HorsesForCoursesAcceptanceTests : WebrRunTest<HorsesForCoursesAccep
             .Client(a => a.CreateClient())
             .Authentication(a => a.HasBearerToken(), a => a.AuthenticateViaTokenEndpointAsync())
             .Reader(a => a.GetReader())
-            .Observe<CoachInfo>("All Assigned Coaches Must Be Suitable",
-                (reader, coachInfo) =>
-                {
-                    var coach = reader.Query(db => db.Find<Coach>(Id<Coach>.From(coachInfo.Id))!);
-                    return coach.AssignedCourses.All(course => coach.IsSuitableFor(course));
-                })
             .Methods(
                 new CreateCoach(),
                 new UpdateCoachSkills(),
@@ -79,23 +98,34 @@ public class HorsesForCoursesAcceptanceTests : WebrRunTest<HorsesForCoursesAccep
                 new UpdateCourseSkills(),
                 new UpdateTimeSlots(),
                 new ConfirmCourse(),
-                new AssignCoachToCourse());
+                new AssignCoachToCourse())
+            .Observe(new AssignedCoachesMustBeSuitable());
 }
 
 [CodeExample]
 public class CreateCoach : ApiMethod<EfReader>
 {
     public override Specification<EfReader> Define() =>
+         // The name of the Api Method
+         // `Create` defaults to `HttpMethod.Post` and also defines the correct fluent pipeline
          Create("Create Coach")
-             .When<CoachInfo>(a => a.Count <= 5)
+             // Condition that decides whether or not this method can be run.
+             // The generic type parameter defines the type of data the Webr uses to keep track of things (see below).
+             .When<CoachInfo>(a => a.Count <= 3)
+             // The route for this method.
              .Route("/coaches")
+             // Perform the call using a random request.
              .Send(
                 from name in Fuzzr.String()
                 from email in Fuzzr.String()
                 select new RegisterCoachRequest(name, email))
-             .ResponseIs<int>(a => a > 0)
-             .Store(a => new CoachInfo(a))
+             // Simple check on the response from above call.
+             .ResponseIs<int>(response => response > 0)
+             // Store any info needed in order to drive and/or validate future method calls.
+             .Store(response => new CoachInfo(response))
+             // Retrieve data from the system for validation.
              .ReadBack((reader, info) => reader.Query(db => db.Find<Coach>(Id<Coach>.From(info.Id))))
+             // Assert that the entity (Coach) is created correctly in the system.
              .Expect(
                  ("Name", (request, coach) => coach.Name.Value == request.Name),
                  ("Email", (request, coach) => coach.Email.Value == request.Email));
@@ -109,21 +139,26 @@ public class UpdateCoachSkills : ApiMethod<EfReader>
             .When<CoachInfo>(a => a.Count != 0)
             .Route(info => info.Id, a => $"/coaches/{a}/skills")
             .Send(
-                from skills in Fuzzr.OneOf(Skills.Pool).Unique(Guid.NewGuid()).Many(3, 5)
+                from skills in
+                    Fuzzr
+                        .OneOf(Skills.Pool)
+                        .Unique(Guid.NewGuid())
+                        .Many(3, 5)
                 select new UpdateSkillsRequest([.. skills]))
-            //, coach => Shrink.ValueFromState(coach.Skills, []))
-            .Store((coach, request) => coach with { Skills = request.Skills })
+            .Store((coach, request) => coach)
             .ReadBack((reader, info) => reader.Query(db => db.Find<Coach>(Id<Coach>.From(info.Id))))
             .Expect(
                 ("Skills", (request, coach) => Skills.Equal(request.Skills, coach.Skills)));
 }
+//, coach => Shrink.ValueFromState(coach.Skills, []))
+
 
 [CodeExample]
 public class CreateCourse : ApiMethod<EfReader>
 {
     public override Specification<EfReader> Define() =>
         Create("Create Course")
-            .When<CourseInfo>(a => a.Count < 3)
+            .When<CourseInfo>(a => a.Count < 2)
             .Route("/courses")
             .Send(
                 from name in Fuzzr.String()
@@ -206,7 +241,7 @@ public class AssignCoachToCourse : ApiMethod<EfReader>
     public override Specification<EfReader> Define() =>
         Update("Assign Coach to Course")
             .When<CourseInfo, CoachInfo>(
-                (reader, course, coach) => course.IsConfirmed && IsSuitableFor(reader, course, coach))
+                (reader, course, coach) => course.IsConfirmed && IsValidFor(reader, course, coach))
             .Route((course, coach) => course.Id, a => $"/courses/{a}/assign-coach")
             .Send((course, coach) => new AssignCoachRequest(coach.Id))
             .Store((course, coach, request) => course)
@@ -218,17 +253,28 @@ public class AssignCoachToCourse : ApiMethod<EfReader>
                     course.AssignedCoach == coach &&
                     coach.AssignedCourses.Contains(course)));
 
-    private static bool IsSuitableFor(EfReader reader, CourseInfo courseInfo, CoachInfo coachInfo)
+    private static bool IsValidFor(EfReader reader, CourseInfo courseInfo, CoachInfo coachInfo)
     {
         var course = reader.Query(ctx => ctx.Find<Course>(Id<Course>.From(courseInfo.Id))!);
         if (course == null) return false;
         if (course.AssignedCoach != null) return false;
         var coach = reader.Query(ctx => ctx.Find<Coach>(Id<Coach>.From(coachInfo.Id))!);
         if (coach == null) return false;
-        return coach.IsSuitableFor(course);
+        return coach.IsSuitableFor(course) && coach.IsAvailableFor(course);
     }
 }
 
+[CodeExample]
+public class AssignedCoachesMustBeSuitable : Invariant<EfReader>
+{
+    public override Observation<EfReader> Define() =>
+        Named("All Assigned Coaches Must Be Suitable")
+            .ForAll<CoachInfo>((reader, coachInfo) =>
+                {
+                    var coach = reader.Query(db => db.Find<Coach>(Id<Coach>.From(coachInfo.Id))!);
+                    return coach.AssignedCourses.All(course => coach.IsSuitableFor(course));
+                });
+}
 
 [CodeExample]
 public static class Skills

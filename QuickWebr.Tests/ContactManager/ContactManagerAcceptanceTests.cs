@@ -29,14 +29,14 @@ namespace QuickWebr.Tests.ContactManager;
 [DocExample(typeof(SearchContacts))]
 [DocReportHeader]
 [DocReport]
-public class ContactManagerAcceptanceTests : WebrRunTest<ContactManagerAcceptanceTests>
+public class ContactManagerAcceptanceTests : WebrTest<ContactManagerAcceptanceTests>
 {
     protected override bool Asserts => false;
     protected override bool PassedExpectationsContains => true;
     protected override bool Report => false;
     protected override bool Explain => false;
 
-    [Fact]
+    [Fact(Skip = "Explicit")]
     public void Example() =>
         Document(a => a.Run(5.Runs(), 20.ExecutionsPerRun()), Verify);
 
@@ -51,7 +51,8 @@ public class ContactManagerAcceptanceTests : WebrRunTest<ContactManagerAcceptanc
                 new UpdateContact(),
                 new DeleteContact(),
                 new GetContacts(),
-                new SearchContacts());
+                new SearchContacts())
+            .Observe();
 
     private void Verify(Article article)
     {

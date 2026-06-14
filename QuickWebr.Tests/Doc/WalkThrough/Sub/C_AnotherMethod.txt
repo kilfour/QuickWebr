@@ -1,0 +1,13 @@
+ ------------------------------------------------------------
+ 1 Run
+ ------------------------------------------------------------
+ Passed Expectations
+ - CreateCoach Can Execute: 1x
+ - 'Create Coach' Status Code is Success: 1x
+ - 'Create Coach' Response: 1x
+ - 'Create Coach' Name: 1x
+ - 'Create Coach' Email: 1x
+ - UpdateCoachSkills Can Execute: 1x
+ - 'Update Coach Skills' Status Code is Success: 1x
+ - 'Update Coach Skills' Skills: 1x
+ ------------------------------------------------------------

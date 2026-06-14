@@ -43,7 +43,7 @@ public class WebrApplicationFactory
         {
             var overrides = new Dictionary<string, string?>
             {
-                ["Auth:JwtKey"] = "a-very-long-random-secret-string-change-me",
+                ["Auth:JwtKey"] = "a-very-long-random-secret-string",
                 ["Auth:Issuer"] = "https://hfcc.example",
                 ["Auth:Audience"] = "hfcc-api",
             };
@@ -61,7 +61,8 @@ public class WebrApplicationFactory
     public EfReader GetReader() => new(Services);
 }
 
-public sealed class EfReader(IServiceProvider services)
+[CodeExample]
+public class EfReader(IServiceProvider services)
 {
     public T Query<T>(Func<AppDbContext, T> query)
     {

@@ -1,0 +1,24 @@
+ ------------------------------------------------------------
+ 1 Run
+ ------------------------------------------------------------
+ Passed Expectations
+ - 'Create Course' Status Code is Success: 2x
+ - 'Create Course' Response: 2x
+ - 'Create Course' Name: 2x
+ - 'Create Course' Start Date: 2x
+ - 'Create Course' End Date: 2x
+ - 'Update Time Slots' Status Code is Success: 2x
+ - 'Update Time Slots' Timeslots: 2x
+ - 'Confirm Course' Status Code is Success: 2x
+ - 'Confirm Course' Confirmed: 2x
+ - 'Update Course Skills' Status Code is Success: 5x
+ - 'Update Course Skills' Skills: 5x
+ - 'Create Coach' Status Code is Success: 4x
+ - 'Create Coach' Response: 4x
+ - 'Create Coach' Name: 4x
+ - 'Create Coach' Email: 4x
+ - 'Assign Coach to Course' Status Code is Success: 1x
+ - 'Assign Coach to Course' Coach is assigned: 1x
+ - 'Update Coach Skills' Status Code is Success: 4x
+ - 'Update Coach Skills' Skills: 4x
+ ------------------------------------------------------------

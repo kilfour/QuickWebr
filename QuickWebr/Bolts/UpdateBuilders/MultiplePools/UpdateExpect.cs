@@ -1,4 +1,5 @@
 using QuickCheckr;
+using QuickCheckr.Diagnostics;
 using QuickCheckr.UnderTheHood;
 using QuickFuzzr;
 
@@ -58,6 +59,8 @@ public class UpdateExpect<TReader, TPoolElementOne, TPoolElementTwo, TRequest, T
                     () => Send<TRequest>.Request(client, httpMethod, route, request))
                 from guard in Checkr.When(() => response.HasExecuted,
                     from responseIsSuccess in StatusCodeIs.Success(name, response)
+                    from _ in Autopsy.Note("((el1.Id, el1.Value), (el2.Id, el2.Value))",
+                        () => ((elementOne.Id, elementOne.Value), (elementTwo.Id, elementTwo.Value)))
                     from stored in elementOne.Replace(store(elementOne.Value, elementTwo.Value, request))
                     from reloaded in Checkr.Capture(() => read(db, elementOne.Value, elementTwo.Value))
                         // from traces in Combine.Checkrs(traces.Select(a =>

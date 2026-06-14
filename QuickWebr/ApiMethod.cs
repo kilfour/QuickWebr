@@ -1,4 +1,3 @@
-using QuickCheckr;
 using QuickWebr.Bolts.CreateBuilders;
 using QuickWebr.Bolts.DeleteBuilders;
 using QuickWebr.Bolts.GetBuilders;
@@ -20,5 +19,3 @@ public abstract class ApiMethod<TReader>
 
     public abstract Specification<TReader> Define();
 }
-
-public record Specification<TReader>(Func<HttpClient, TReader, CheckrOf<(Func<bool>, CheckrOf<Case>)>> Checkr);

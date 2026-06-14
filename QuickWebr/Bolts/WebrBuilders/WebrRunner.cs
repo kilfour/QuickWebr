@@ -1,5 +1,6 @@
 using QuickCheckr;
 using QuickCheckr.Protocol;
+using QuickCheckr.Protocol.Custodians;
 using QuickCheckr.UnderTheHood;
 
 namespace QuickWebr.Bolts.WebrBuilders;
@@ -30,6 +31,17 @@ public class WebrRunner<TContext, TReader>
         this.readBackFactory = readBackFactory;
     }
 
+    private ICustodian custodian = Custodian.Default;
+    public WebrRunner<TContext, TReader> WithCustodian(ICustodian custodian)
+    {
+        this.custodian = custodian;
+        return this;
+    }
+    private Func<CheckrConfig, CheckrConfig> GetConfig()
+    {
+        return a => configure(a with { Custodian = custodian });
+    }
+
     public static WebrRunner<T, TReader> Named<T>(
         string name,
         Func<T> contextFactory,
@@ -40,23 +52,23 @@ public class WebrRunner<TContext, TReader>
         new(name, contextFactory, clientFactory, isAuthenticated, authenticate, readBackFactory);
 
     private ApiMethod<TReader>[] methods = [];
-    public ConfiguredCheckr Methods(params ApiMethod<TReader>[] methods)
+    public WebrRunner<TContext, TReader> Methods(params ApiMethod<TReader>[] methods)
     {
         this.methods = methods;
-        return TheCheckr().Configure(configure);
+        return this;
     }
 
-    private readonly List<Func<TReader, CheckrOf<Case>>> invariants = [];
     private readonly Func<TContext> contextFactory;
     private readonly Func<TContext, HttpClient> clientFactory;
     private readonly Func<HttpClient, bool> isAuthenticated;
     private readonly Func<HttpClient, Task> authenticate;
     private readonly Func<TContext, TReader> readBackFactory;
 
-    public WebrRunner<TContext, TReader> Observe<TPoolElement>(string label, Func<TReader, TPoolElement, bool> expectation)
+    private Invariant<TReader>[] invariants = [];
+    public ConfiguredCheckr Observe(params Invariant<TReader>[] invariants)
     {
-        invariants.Add(a => Trackr.PoolExpectEach<TPoolElement>(label, b => expectation(a, b)));
-        return this;
+        this.invariants = invariants;
+        return TheCheckr().Configure(GetConfig());
     }
 
     // public Webr<TContext> DisableWarnings()
@@ -76,7 +88,7 @@ public class WebrRunner<TContext, TReader>
         from reader in Trackr.Stashed(() => readBackFactory(context))
         from auth in Checkr.ActWhen("Auth", () => !isAuthenticated(client), () => authenticate(client))
         from _ in Checkr.OneOfWhen([.. methods.Select(m => m.Define().Checkr(client, reader))])
-        from invariants in Combine.Checkrs(invariants.Select(a => a(reader)))
+        from invariants in Combine.Checkrs(invariants.Select(a => a.Define().Invariant(reader)))
         select Case.Closed;
 
     public void Scenario(params ApiMethod<TReader>[] methods)
@@ -95,6 +107,6 @@ public class WebrRunner<TContext, TReader>
                     select Case.Closed)]
             )
             select Case.Closed;
-        checkr.Configure(configure).Configure(a => a with { ShrinkMode = ShrinkMode.None }).Run(1.Runs(), methods.Length.ExecutionsPerRun());
+        checkr.Configure(a => GetConfig()(a) with { ShrinkMode = ShrinkMode.None }).Run(1.Runs(), methods.Length.ExecutionsPerRun());
     }
 }

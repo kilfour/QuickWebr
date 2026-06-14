@@ -27,7 +27,7 @@ public class WebrApplicationFactory
         {
             var overrides = new Dictionary<string, string?>
             {
-                ["Auth:JwtKey"] = "a-very-long-random-secret-string-change-me",
+                ["Auth:JwtKey"] = "a-very-long-random-secret-string",
                 ["Auth:Issuer"] = "https://hfcc.example",
                 ["Auth:Audience"] = "hfcc-api",
             };
@@ -50,12 +50,6 @@ Webr.Named("Horses for Courses")
     .Client(a => a.CreateClient())
     .Authentication(a => a.HasBearerToken(), a => a.AuthenticateViaTokenEndpointAsync())
     .Reader(a => a.GetReader())
-    .Observe<CoachInfo>("All Assigned Coaches Must Be Suitable",
-        (reader, coachInfo) =>
-        {
-            var coach = reader.Query(db => db.Find<Coach>(Id<Coach>.From(coachInfo.Id))!);
-            return coach.AssignedCourses.All(course => coach.IsSuitableFor(course));
-        })
     .Methods(
         new CreateCoach(),
         new UpdateCoachSkills(),
@@ -63,7 +57,8 @@ Webr.Named("Horses for Courses")
         new UpdateCourseSkills(),
         new UpdateTimeSlots(),
         new ConfirmCourse(),
-        new AssignCoachToCourse());
+        new AssignCoachToCourse())
+    .Observe(new AssignedCoachesMustBeSuitable());
 ```
 
 **The Methods:**  
@@ -71,16 +66,26 @@ Webr.Named("Horses for Courses")
 public class CreateCoach : ApiMethod<EfReader>
 {
     public override Specification<EfReader> Define() =>
+         // The name of the Api Method
+         // `Create` defaults to `HttpMethod.Post` and also defines the correct fluent pipeline
          Create("Create Coach")
-             .When<CoachInfo>(a => a.Count <= 5)
+             // Condition that decides whether or not this method can be run.
+             // The generic type parameter defines the type of data the Webr uses to keep track of things (see below).
+             .When<CoachInfo>(a => a.Count <= 3)
+             // The route for this method.
              .Route("/coaches")
+             // Perform the call using a random request.
              .Send(
                 from name in Fuzzr.String()
                 from email in Fuzzr.String()
                 select new RegisterCoachRequest(name, email))
-             .ResponseIs<int>(a => a > 0)
-             .Store(a => new CoachInfo(a))
+             // Simple check on the response from above call.
+             .ResponseIs<int>(response => response > 0)
+             // Store any info needed in order to drive and/or validate future method calls.
+             .Store(response => new CoachInfo(response))
+             // Retrieve data from the system for validation.
              .ReadBack((reader, info) => reader.Query(db => db.Find<Coach>(Id<Coach>.From(info.Id))))
+             // Assert that the entity (Coach) is created correctly in the system.
              .Expect(
                  ("Name", (request, coach) => coach.Name.Value == request.Name),
                  ("Email", (request, coach) => coach.Email.Value == request.Email));
@@ -94,9 +99,12 @@ public class UpdateCoachSkills : ApiMethod<EfReader>
             .When<CoachInfo>(a => a.Count != 0)
             .Route(info => info.Id, a => $"/coaches/{a}/skills")
             .Send(
-                from skills in Fuzzr.OneOf(Skills.Pool).Unique(Guid.NewGuid()).Many(3, 5)
+                from skills in
+                    Fuzzr
+                        .OneOf(Skills.Pool)
+                        .Unique(Guid.NewGuid())
+                        .Many(3, 5)
                 select new UpdateSkillsRequest([.. skills]))
-            //, coach => Shrink.ValueFromState(coach.Skills, []))
             .Store((coach, request) => coach with { Skills = request.Skills })
             .ReadBack((reader, info) => reader.Query(db => db.Find<Coach>(Id<Coach>.From(info.Id))))
             .Expect(
@@ -108,7 +116,7 @@ public class CreateCourse : ApiMethod<EfReader>
 {
     public override Specification<EfReader> Define() =>
         Create("Create Course")
-            .When<CourseInfo>(a => a.Count < 3)
+            .When<CourseInfo>(a => a.Count < 2)
             .Route("/courses")
             .Send(
                 from name in Fuzzr.String()
@@ -211,7 +219,32 @@ public class AssignCoachToCourse : ApiMethod<EfReader>
 }
 ```
 
+**Invariant:**  
+```csharp
+public class AssignedCoachesMustBeSuitable : Invariant<EfReader>
+{
+    public override Observation<EfReader> Define() =>
+        Named("All Assigned Coaches Must Be Suitable")
+            .ForAll<CoachInfo>((reader, coachInfo) =>
+                {
+                    var coach = reader.Query(db => db.Find<Coach>(Id<Coach>.From(coachInfo.Id))!);
+                    return coach.AssignedCourses.All(course => coach.IsSuitableFor(course));
+                });
+}
+```
+
 **Helpers:**  
+```csharp
+public class EfReader(IServiceProvider services)
+{
+    public T Query<T>(Func<AppDbContext, T> query)
+    {
+        using var scope = services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        return query(db);
+    }
+}
+```
 ```csharp
 public static class Skills
 {
@@ -234,7 +267,7 @@ public static class Skills
 ```text
 ------------------------------------------------------------
  Test:                    Example
- Location:                HorsesForCoursesAcceptanceTests.cs:45:1
+ Location:                HorsesForCoursesAcceptanceTests.cs:57:1
  Original failing run:    48 executions
  Minimal failing case:    8 executions (after 52 shrinks)
  Seed:                    1211418307
@@ -303,4 +336,32 @@ public static class Skills
  - 'Assign Coach to Course' Status Code is Success: 1x
  - 'Assign Coach to Course' Coach is assigned: 1x
  ------------------------------------------------------------
+```
+## Addendum: Free QuickCheckr functionality.
+
+**Scenarios:**  
+```csharp
+Webr.Named("Horses for Courses")
+    .Context(() => new WebrApplicationFactory())
+    .Client(a => a.CreateClient())
+    .Authentication(a => a.HasBearerToken(), a => a.AuthenticateViaTokenEndpointAsync())
+    .Reader(a => a.GetReader())
+    .Scenario(
+        new CreateCourse(),
+        new UpdateCourseSkills());
+```
+
+**Investigating:**  
+```csharp
+GetWebr().Conduct(5.Investigations(), 2.Runs(), 20.ExecutionsPerRun());
+```
+
+**Cold Cases (Vault):**  
+```csharp
+GetWebr().ReviewColdCases().Run(3.Runs(), 25.ExecutionsPerRun());
+```
+
+**Diagnostics:**  
+```csharp
+GetWebr().Autopsy(1750761734, 20.ExecutionsPerRun(), AutopsyProbe.StartsWith("ActionShrinking"));
 ```

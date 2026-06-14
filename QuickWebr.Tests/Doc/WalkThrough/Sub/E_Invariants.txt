@@ -1,0 +1,76 @@
+ ------------------------------------------------------------
+ Test:                    Example
+ Location:                E_Invariants.cs:44:1
+ Original failing run:    23 executions
+ Minimal failing case:    9 executions (after 26 shrinks)
+ Seed:                    2093915464
+ ------------------------------------------------------------
+  Executed: Create Course
+   - 'Create Course' to Pool = CourseInfo-1
+   - 'Create Course' Request = { Name: "epmytod", StartDate: 29.December(2026), EndDate: 26.January(2027) }
+   - Route                   = /courses
+ ------------------------------------------------------------
+  Executed: Create Coach
+   - 'Create Coach' to Pool = CoachInfo-1
+   - 'Create Coach' Request = { Name: "zzjgpg", Email: "ntrb" }
+   - Route                  = /coaches
+ ------------------------------------------------------------
+  Executed: Create Coach
+   - 'Create Coach' to Pool = CoachInfo-2
+   - 'Create Coach' Request = { Name: "hvnszr", Email: "mer" }
+   - Route                  = /coaches
+ ------------------------------------------------------------
+  Executed: Update Course Skills
+   - Update Course Skills           = CourseInfo-1
+   - 'Update Course Skills' Request = [ "CI/CD" ]
+   - Route                          = /courses/1/skills
+ ------------------------------------------------------------
+  Executed: Update Time Slots
+   - Update Time Slots           = CourseInfo-1
+   - 'Update Time Slots' Request = [ { Start: 13, End: 15 } ]
+   - Route                       = /courses/1/timeslots
+ ------------------------------------------------------------
+  Executed: Confirm Course
+   - Confirm Course = CourseInfo-1
+   - Route          = /courses/1/confirm
+ ------------------------------------------------------------
+  Executed: Update Coach Skills
+   - Update Coach Skills           = CoachInfo-2
+   - 'Update Coach Skills' Request = { Skills: [ "CI/CD" ] }
+   - Route                         = /coaches/2/skills
+ ------------------------------------------------------------
+  Executed: Assign Coach to Course
+   - Assign Coach to Course           = ( CourseInfo-1, CoachInfo-2 )
+   - 'Assign Coach to Course' Request = { CoachId: 2 }
+   - Route                            = /courses/1/assign-coach
+ ------------------------------------------------------------
+  Executed: Update Coach Skills
+   - Update Coach Skills = CoachInfo-2
+   - Route               = /coaches/2/skills
+   - WARNING: All inputs were considered irrelevant.
+ ================================================================
+  !! Expectation Failed: All Assigned Coaches Must Be Suitable
+       CoachInfo-2
+ ================================================================
+ Passed Expectations
+ - 'Create Course' Status Code is Success: 2x
+ - 'Create Course' Response: 2x
+ - 'Create Course' Name: 2x
+ - 'Create Course' Start Date: 2x
+ - 'Create Course' End Date: 2x
+ - 'Create Coach' Status Code is Success: 4x
+ - 'Create Coach' Response: 4x
+ - 'Create Coach' Name: 4x
+ - 'Create Coach' Email: 4x
+ - All Assigned Coaches Must Be Suitable: 21x
+ - 'Update Course Skills' Status Code is Success: 3x
+ - 'Update Course Skills' Skills: 3x
+ - 'Update Coach Skills' Status Code is Success: 7x
+ - 'Update Coach Skills' Skills: 7x
+ - 'Update Time Slots' Status Code is Success: 4x
+ - 'Update Time Slots' Timeslots: 4x
+ - 'Confirm Course' Status Code is Success: 2x
+ - 'Confirm Course' Confirmed: 2x
+ - 'Assign Coach to Course' Status Code is Success: 1x
+ - 'Assign Coach to Course' Coach is assigned: 1x
+ ------------------------------------------------------------

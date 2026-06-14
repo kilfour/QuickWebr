@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using QuickCheckr;
+using QuickCheckr.Diagnostics;
 using QuickCheckr.UnderTheHood;
 using QuickFuzzr;
 
@@ -41,6 +42,7 @@ public class CreateExpect<TReader, TRequest, TResponse, TPoolElement, TDbValue>(
                     from result in Checkr.Capture(() => response.Result.Content.ReadFromJsonAsync<TResponse>().Result)
                     from created in Checkr.Expect($"'{name}' Response", () => responseCheck(result))
                     from stored in Trackr.ToPool($"'{name}' to Pool", () => toPool(request, result))
+                    from _ in Autopsy.Note("Create", () => $"{stored.GetType().Name}-{result}")
                     from reloaded in Checkr.Capture(() => read(db, stored))
                     from checks in Combine.Checkrs(expectations.Select(a =>
                         Checkr.Expect($"'{name}' {a.label}", () => a.expectation(request, reloaded))))
