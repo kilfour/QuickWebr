@@ -1,6 +1,6 @@
  ------------------------------------------------------------
  Test:                    Example
- Location:                E_Invariants.cs:45:1
+ Location:                E_Invariants.cs:42:1
  Original failing run:    23 executions
  Minimal failing case:    8 executions (after 27 shrinks)
  Seed:                    2093915464

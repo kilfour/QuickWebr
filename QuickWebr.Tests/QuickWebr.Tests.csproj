@@ -28,11 +28,11 @@
   </ItemGroup>
   
   <ItemGroup>
-    <!-- <PackageReference Include="QuickCheckr.Authoring" Version="0.2.0" /> -->
+    <PackageReference Include="QuickCheckr.Authoring" Version="0.2.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\QuickCheckr\QuickCheckr.Authoring\QuickCheckr.Authoring.csproj" />
+    <!-- <ProjectReference Include="..\..\QuickCheckr\QuickCheckr.Authoring\QuickCheckr.Authoring.csproj" /> -->
   </ItemGroup>
   
 </Project>

@@ -16,7 +16,7 @@ Maybe you thought it was the materialization method of the underlying builder in
 
 You are partially right, but ...
 
-We can also define `Observations`. 
+We can also define observations:. 
 """)]
 [DocExample(typeof(AssignedCoachesMustBeSuitable))]
 [DocContent("And plug it in like so:")]

@@ -19,6 +19,7 @@ two related entities and already consist out of 7 calls.
 QuickWebr however, allows you to explore all possible scenarios by using `.Methods(...)` instead of `.Scenario(...)`
 """)]
 [DocExample(typeof(D_ButThatGetsOutOfHandQuickly), nameof(RunWebr))]
+[DocContent("`.Observe()` turns the selected API methods into an executable *Checkr*. We'll revisit this later.")]
 [DocReportHeader]
 [DocReport]
 public class D_ButThatGetsOutOfHandQuickly : WebrRunnerTest<D_ButThatGetsOutOfHandQuickly>

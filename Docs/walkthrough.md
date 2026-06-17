@@ -185,7 +185,7 @@ For simple scenarios the previous examples work fine,
 but most Apis contain a lot more methods and writing out all possible scenarios gets very tedious, very quickly.
 
 The simple 'Horses for Courses' Api deals with Coaches and Courses,
-two related entities and already consist out of 7 calls. 
+two related entities and already consists of 7 calls. 
 
 QuickWebr however, allows you to explore all possible scenarios by using `.Methods(...)` instead of `.Scenario(...)`  
 ```csharp
@@ -237,7 +237,7 @@ Maybe you thought it was the materialization method of the underlying builder in
 
 You are partially right, but ...
 
-We can also define `Observations`.   
+We can also define observations:
 ```csharp
 public class AssignedCoachesMustBeSuitable : Invariant<EfReader>
 {

@@ -4,13 +4,52 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <Version>0.0.1</Version>
+    <Authors>Kilfour</Authors>
+
+    <PackageId>QuickWebr</PackageId>
+    <Title>QuickWebr</Title>
+    <Description>When your bugs are from Mars.</Description>
+    <PackageTags>fuzzing;testing;shrinking;QuickFuzzr;QuickCheckr</PackageTags>
+
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/kilfour/QuickWebr</RepositoryUrl>
+    <RepositoryBranch>main</RepositoryBranch>
+    <PackageProjectUrl>https://github.com/kilfour/QuickWebr</PackageProjectUrl>
+    
+    <!-- NuGet metadata -->
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon>icon.png</PackageIcon>
+
+    <!-- Docs & symbols -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>1591</NoWarn>
+
+    <!-- SourceLink / determinism / validation -->
+    <!-- <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <EnablePackageValidation>true</EnablePackageValidation> -->
+
+    <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\README.md" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)..\icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
   
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\QuickCheckr\QuickCheckr\QuickCheckr.csproj" />
+    <PackageReference Include="QuickCheckr" Version="0.2.1" />
   </ItemGroup>
+
+  <!-- <ItemGroup>
+    <ProjectReference Include="..\..\QuickCheckr\QuickCheckr\QuickCheckr.csproj" />
+  </ItemGroup> -->
+
 </Project>

@@ -274,7 +274,10 @@ public class AssignedCoachesMustBeSuitable : Invariant<EfReader>
         Named("All Assigned Coaches Must Be Suitable")
             .ForAll<CoachInfo>((reader, coachInfo) =>
                 {
-                    var coach = reader.Query(db => db.Find<Coach>(Id<Coach>.From(coachInfo.Id))!);
+                    var coach = reader.Query(db =>
+                        db.Set<Coach>()
+                            .Include(a => a.AssignedCourses)
+                            .Single(a => a.Id == Id<Coach>.From(coachInfo.Id)));
                     return coach.AssignedCourses.All(course => coach.IsSuitableFor(course));
                 });
 }
