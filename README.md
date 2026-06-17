@@ -115,7 +115,7 @@ When an invariant fails, QuickWebr reports the smallest API story it could find 
 * **Shrinking:** Reduce failing API histories to small, reproducible reports.
 * **Read-back validation:** Verify behaviour against the real system state.
 * **Invariants:** Check business rules across the whole explored API history.
-* **QuickWebr powered:** Seeds, investigations, cold cases, diagnostics, and shrinking come along for free.
+* **QuickCheckr powered:** Seeds, investigations, cold cases, diagnostics, and shrinking come along for free.
 
 ## Installation
 
