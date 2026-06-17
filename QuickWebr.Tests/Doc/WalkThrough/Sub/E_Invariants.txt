@@ -1,19 +1,14 @@
  ------------------------------------------------------------
  Test:                    Example
- Location:                E_Invariants.cs:44:1
+ Location:                E_Invariants.cs:45:1
  Original failing run:    23 executions
- Minimal failing case:    9 executions (after 26 shrinks)
+ Minimal failing case:    8 executions (after 27 shrinks)
  Seed:                    2093915464
  ------------------------------------------------------------
   Executed: Create Course
    - 'Create Course' to Pool = CourseInfo-1
    - 'Create Course' Request = { Name: "epmytod", StartDate: 29.December(2026), EndDate: 26.January(2027) }
    - Route                   = /courses
- ------------------------------------------------------------
-  Executed: Create Coach
-   - 'Create Coach' to Pool = CoachInfo-1
-   - 'Create Coach' Request = { Name: "zzjgpg", Email: "ntrb" }
-   - Route                  = /coaches
  ------------------------------------------------------------
   Executed: Create Coach
    - 'Create Coach' to Pool = CoachInfo-2
@@ -37,16 +32,16 @@
   Executed: Update Coach Skills
    - Update Coach Skills           = CoachInfo-2
    - 'Update Coach Skills' Request = { Skills: [ "CI/CD" ] }
-   - Route                         = /coaches/2/skills
+   - Route                         = /coaches/1/skills
  ------------------------------------------------------------
   Executed: Assign Coach to Course
    - Assign Coach to Course           = ( CourseInfo-1, CoachInfo-2 )
-   - 'Assign Coach to Course' Request = { CoachId: 2 }
    - Route                            = /courses/1/assign-coach
+   - 'Assign Coach to Course' Request = { CoachId: 1 }
  ------------------------------------------------------------
   Executed: Update Coach Skills
    - Update Coach Skills = CoachInfo-2
-   - Route               = /coaches/2/skills
+   - Route               = /coaches/1/skills
    - WARNING: All inputs were considered irrelevant.
  ================================================================
   !! Expectation Failed: All Assigned Coaches Must Be Suitable

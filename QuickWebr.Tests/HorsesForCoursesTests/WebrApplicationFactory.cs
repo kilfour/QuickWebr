@@ -25,7 +25,10 @@ public class WebrApplicationFactory
                 d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
 
             if (descriptor != null)
+            {
+                services.RemoveAll<DbContextOptions<AppDbContext>>();
                 services.RemoveAll<AppDbContext>();
+            }
 
             connection = new SqliteConnection("DataSource=:memory:");
             connection.Open();
@@ -44,8 +47,8 @@ public class WebrApplicationFactory
             var overrides = new Dictionary<string, string?>
             {
                 ["Auth:JwtKey"] = "a-very-long-random-secret-string",
-                ["Auth:Issuer"] = "https://hfcc.example",
-                ["Auth:Audience"] = "hfcc-api",
+                ["Auth:Issuer"] = "https://hfc.example",
+                ["Auth:Audience"] = "hfc-api",
             };
 
             cfg.AddInMemoryCollection(overrides);

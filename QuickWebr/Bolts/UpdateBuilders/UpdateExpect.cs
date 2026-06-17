@@ -16,6 +16,24 @@ public class UpdateExpect<TReader, TPoolElement, TRequest, TRouteId, TDbValue>(
     Func<TPoolElement, TRequest, TPoolElement> store,
     Func<TReader, TPoolElement, TDbValue> read)
 {
+    private readonly List<(string ProbeLabel, Func<TPoolElement, TRequest, TDbValue, object> Factory)> probes = [];
+    public UpdateExpect<TReader, TPoolElement, TRequest, TRouteId, TDbValue> Probe(
+        string probeLabel,
+        Func<TPoolElement, TRequest, TDbValue, object> factory)
+    {
+        probes.Add((probeLabel, factory));
+        return this;
+    }
+
+    private readonly List<(string TraceLabel, Func<TPoolElement, TRequest, TDbValue, object> Factory)> traces = [];
+    public UpdateExpect<TReader, TPoolElement, TRequest, TRouteId, TDbValue> Trace(
+        string traceLabel,
+        Func<TPoolElement, TRequest, TDbValue, object> factory)
+    {
+        traces.Add((traceLabel, factory));
+        return this;
+    }
+
     private readonly List<MethodFailure<TPoolElement, TRequest, TRouteId>> failures = [];
 
     public UpdateExpect<TReader, TPoolElement, TRequest, TRouteId, TDbValue> FailsWith(
@@ -36,15 +54,6 @@ public class UpdateExpect<TReader, TPoolElement, TRequest, TRouteId, TDbValue>(
         return this;
     }
 
-    private readonly List<(string TraceLabel, Func<TPoolElement, TRequest, TDbValue, object> Factory)> traces = [];
-    public UpdateExpect<TReader, TPoolElement, TRequest, TRouteId, TDbValue> Trace(
-        string traceLabel,
-        Func<TPoolElement, TRequest, TDbValue, object> factory)
-    {
-        traces.Add((traceLabel, factory));
-        return this;
-    }
-
     public Specification<TReader> Expect(params (string label, Func<TRequest, TDbValue, bool> expectation)[] expectations)
         => new(TheCheckr(expectations));
 
@@ -55,16 +64,20 @@ public class UpdateExpect<TReader, TPoolElement, TRequest, TRouteId, TDbValue>(
             poolCondition.GetCheckr(name, element =>
                 from route in Checkr.Capture(() => routeFactory(getRouteId(element.Value)))
                 from traceRoute in Checkr.Trace("Route", () => route)
+                from autopsyRoute in Autopsy.Note("Route", () => route)
                 from request in Checkr.Input($"'{name}' Request", requestInfo.Fuzzr, requestInfo.GetShrinkers(element.Value))
                 from response in Checkr.ShrinkableAct(name,
                     () => Send<TRequest>.Request(client, httpMethod, route, request))
                 from guard in Checkr.When(() => response.HasExecuted,
                     from responseIsSuccess in StatusCodeIs.Success(name, response)
                     from stored in element.Replace(store(element.Value, request))
-                    from _ in Autopsy.Note("Update", () => $"{element.Value!.GetType().Name}-{element.Id}")
+                    from _ in Autopsy.Note("Status", () => $"{response.Result.StatusCode}")
+                    from __ in Autopsy.Note("Update", () => $"{element.Value!.GetType().Name}-{element.Id}")
                     from reloaded in Checkr.Capture(() => read(db, element.Value))
-                    from traces in Combine.Checkrs(traces.Select(a =>
+                    from tracesCheckr in Combine.Checkrs(traces.Select(a =>
                         Checkr.Trace($"'{name}' {a.TraceLabel}", () => a.Factory(element.Value, request, reloaded))))
+                    from probesCheckr in Combine.Checkrs(probes.Select(a =>
+                        Autopsy.Note($"'{name}' {a.ProbeLabel}", () => a.Factory(element.Value, request, reloaded))))
                     from checks in Combine.Checkrs(expectations.Select(a =>
                         Checkr.Expect($"'{name}' {a.label}", () => a.expectation(request, reloaded))))
                     from failureChecks in Combine.Checkrs(

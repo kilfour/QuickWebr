@@ -8,14 +8,15 @@ namespace QuickWebr.Bolts;
 
 public static class StatusCodeIs
 {
-    public static CheckrOf<Case> Success(string route, ActResult<HttpResponseMessage> response) =>
+    public static CheckrOf<bool> Success(string route, ActResult<HttpResponseMessage> response) =>
+        from ok in Checkr.Capture(() => Success(response.Result))
         from expect in Checkr.Expect($"'{route}' Status Code is Success",
-        () => Success(response.Result),
+        () => ok,
         () => [.. GetProblem(response.Result).Prepend(response.Result.StatusCode.ToString())])
-        // response.Result.StatusCode.ToString()
-        // from trace in Checkr.TraceWhen("Bad Request",
-        //     () => !Success(response), () => GetProblem(response)!)
-        select Case.Closed;
+            // response.Result.StatusCode.ToString()
+            // from trace in Checkr.TraceWhen("Bad Request",
+            //     () => !Success(response), () => GetProblem(response)!)
+        select ok;
 
     public static CheckrOf<Case> Success(string route, HttpResponseMessage response) =>
         from expect in Checkr.Expect($"'{route}' Status Code is Success", () => Success(response), response.StatusCode.ToString)

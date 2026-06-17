@@ -2,7 +2,7 @@
 ### Infrastructure Setup
 First things first.  
 We need to go through the usual WebApi acceptance test setup ceremony.  
-In this one we swap out the configured DbContext with an inmemory sqlite one.  
+In this one we swap out the configured DbContext with an in-memory sqlite one.  
 And we add a method that returns a `IReader`, here an `EfReader`, which we can use for verifying things later.  
 ```csharp
 public class WebrApplicationFactory
@@ -16,7 +16,10 @@ public class WebrApplicationFactory
             var descriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
             if (descriptor != null)
+            {
+                services.RemoveAll<DbContextOptions<AppDbContext>>();
                 services.RemoveAll<AppDbContext>();
+            }
             connection = new SqliteConnection("DataSource=:memory:");
             connection.Open();
             services.AddDbContext<AppDbContext>(options =>
@@ -31,8 +34,8 @@ public class WebrApplicationFactory
             var overrides = new Dictionary<string, string?>
             {
                 ["Auth:JwtKey"] = "a-very-long-random-secret-string",
-                ["Auth:Issuer"] = "https://hfcc.example",
-                ["Auth:Audience"] = "hfcc-api",
+                ["Auth:Issuer"] = "https://hfc.example",
+                ["Auth:Audience"] = "hfc-api",
             };
             cfg.AddInMemoryCollection(overrides);
         });
@@ -56,6 +59,8 @@ public class EfReader(IServiceProvider services)
     }
 }
 ```
+
+**The Runner:**  
 Once that is out of the way, we can set up a method that returns a reusable `WebrRunner`.  
 ```csharp
 public static WebrRunner<WebrApplicationFactory, EfReader> WebrRunner() =>
@@ -143,8 +148,9 @@ public class UpdateCoachSkills : ApiMethod<EfReader>
                         .Unique(Guid.NewGuid())
                         .Many(3, 5)
                 select new UpdateSkillsRequest([.. skills]))
-            .Store((coach, request) => coach with { Skills = request.Skills })
+            .Store((coach, request) => coach)
             .ReadBack((reader, info) => reader.Query(db => db.Find<Coach>(Id<Coach>.From(info.Id))))
+            .Probe("Skills", (info, request, coach) => coach!)
             .Expect(
                 ("Skills", (request, coach) => Skills.Equal(request.Skills, coach.Skills)));
 }
@@ -181,7 +187,7 @@ but most Apis contain a lot more methods and writing out all possible scenarios 
 The simple 'Horses for Courses' Api deals with Coaches and Courses,
 two related entities and already consist out of 7 calls. 
 
-QuickWebr however, allows you to explore all possible scenario's by using `.Methods(...)` instead of `.Scenario(...)`  
+QuickWebr however, allows you to explore all possible scenarios by using `.Methods(...)` instead of `.Scenario(...)`  
 ```csharp
 WebrRunner()
     .Methods(
@@ -239,6 +245,10 @@ public class AssignedCoachesMustBeSuitable : Invariant<EfReader>
         Named("All Assigned Coaches Must Be Suitable")
             .ForAll<CoachInfo>((reader, coachInfo) =>
                 {
+                    var all = reader.Query(
+                        db => db.Set<Coach>().Include(a => a.AssignedCourses)
+                        .Single(a => a.Id == Id<Coach>.From(coachInfo.Id)));
+                    // all.PulseToLog("debug.log");
                     var coach = reader.Query(db => db.Find<Coach>(Id<Coach>.From(coachInfo.Id))!);
                     return coach.AssignedCourses.All(course => coach.IsSuitableFor(course));
                 });
@@ -255,96 +265,78 @@ WebrRunner()
         new UpdateTimeSlots(),
         new ConfirmCourse(),
         new AssignCoachToCourse())
-    .Observe(new AssignedCoachesMustBeSuitable())
-    .Run(10.Runs(), 20.ExecutionsPerRun());
+.Observe(new AssignedCoachesMustBeSuitable())
+.Run(5.Runs(), 50.ExecutionsPerRun());
 ```
 
 **The Report:**  
 ```text
 ------------------------------------------------------------
  Test:                    Example
- Location:                E_Invariants.cs:42:1
- Original failing run:    18 executions
- Minimal failing case:    12 executions (after 15 shrinks)
- Seed:                    1461376629
- ------------------------------------------------------------
-  Executed: Create Coach
-   - 'Create Coach' to Pool = CoachInfo-1
-   - 'Create Coach' Request = { Name: "a", Email: "qjfwphsoqc" }
-   - Route                  = /coaches
- ------------------------------------------------------------
-  Executed: Create Coach
-   - 'Create Coach' to Pool = CoachInfo-2
-   - 'Create Coach' Request = { Name: "weldnw", Email: "fvgmksqt" }
-   - Route                  = /coaches
+ Location:                E_Invariants.cs:45:1
+ Original failing run:    23 executions
+ Minimal failing case:    8 executions (after 27 shrinks)
+ Seed:                    2093915464
  ------------------------------------------------------------
   Executed: Create Course
    - 'Create Course' to Pool = CourseInfo-1
-   - 'Create Course' Request = { Name: "zwenfd", StartDate: 22.January(2026), EndDate: 22.February(2026) }
+   - 'Create Course' Request = { Name: "epmytod", StartDate: 29.December(2026), EndDate: 26.January(2027) }
    - Route                   = /courses
  ------------------------------------------------------------
   Executed: Create Coach
-   - 'Create Coach' to Pool = CoachInfo-3
-   - 'Create Coach' Request = { Name: "cwkektm", Email: "l" }
+   - 'Create Coach' to Pool = CoachInfo-2
+   - 'Create Coach' Request = { Name: "hvnszr", Email: "mer" }
    - Route                  = /coaches
  ------------------------------------------------------------
-  Executed: Create Coach
-   - 'Create Coach' to Pool = CoachInfo-4
-   - 'Create Coach' Request = { Name: "bltlnrm", Email: "dwcj" }
-   - Route                  = /coaches
+  Executed: Update Course Skills
+   - Update Course Skills           = CourseInfo-1
+   - 'Update Course Skills' Request = [ "CI/CD" ]
+   - Route                          = /courses/1/skills
  ------------------------------------------------------------
   Executed: Update Time Slots
    - Update Time Slots           = CourseInfo-1
-   - 'Update Time Slots' Request = [ { Day: Friday, Start: 10, End: 13 } ]
+   - 'Update Time Slots' Request = [ { Start: 13, End: 15 } ]
    - Route                       = /courses/1/timeslots
  ------------------------------------------------------------
   Executed: Confirm Course
    - Confirm Course = CourseInfo-1
    - Route          = /courses/1/confirm
  ------------------------------------------------------------
+  Executed: Update Coach Skills
+   - Update Coach Skills           = CoachInfo-2
+   - 'Update Coach Skills' Request = { Skills: [ "CI/CD" ] }
+   - Route                         = /coaches/1/skills
+ ------------------------------------------------------------
   Executed: Assign Coach to Course
-   - Assign Coach to Course           = ( CourseInfo-1, CoachInfo-4 )
-   - 'Assign Coach to Course' Request = { CoachId: 4 }
+   - Assign Coach to Course           = ( CourseInfo-1, CoachInfo-2 )
    - Route                            = /courses/1/assign-coach
+   - 'Assign Coach to Course' Request = { CoachId: 1 }
  ------------------------------------------------------------
-  Executed: Create Course
-   - 'Create Course' to Pool = CourseInfo-2
-   - 'Create Course' Request = { Name: "wrtux", StartDate: 4.February(2026), EndDate: 27.February(2026) }
-   - Route                   = /courses
- ------------------------------------------------------------
-  Executed: Update Time Slots
-   - Update Time Slots           = CourseInfo-2
-   - 'Update Time Slots' Request = [ ]
-   - Route                       = /courses/2/timeslots
- ------------------------------------------------------------
-  Executed: Confirm Course
-   - Confirm Course = CourseInfo-2
-   - Route          = /courses/2/confirm
- ------------------------------------------------------------
-  Executed: Assign Coach to Course
-   - Assign Coach to Course = ( CourseInfo-2, CoachInfo-4 )
-   - Route                  = /courses/2/assign-coach
+  Executed: Update Coach Skills
+   - Update Coach Skills = CoachInfo-2
+   - Route               = /coaches/1/skills
    - WARNING: All inputs were considered irrelevant.
- ==========================================================================
-  !! Expectation Failed: 'Assign Coach to Course' Status Code is Success
-       BadRequest
-       {"type":"https://httpstatuses.com/400","title":"Domain rule violated","status":400,"detail":"Coach not available for course."}
- ==========================================================================
+ ================================================================
+  !! Expectation Failed: All Assigned Coaches Must Be Suitable
+       CoachInfo-2
+ ================================================================
  Passed Expectations
- - 'Create Coach' Status Code is Success: 4x
- - 'Create Coach' Response: 4x
- - 'Create Coach' Name: 4x
- - 'Create Coach' Email: 4x
- - All Assigned Coaches Must Be Suitable: 18x
- - 'Update Coach Skills' Status Code is Success: 5x
- - 'Update Coach Skills' Skills: 5x
  - 'Create Course' Status Code is Success: 2x
  - 'Create Course' Response: 2x
  - 'Create Course' Name: 2x
  - 'Create Course' Start Date: 2x
  - 'Create Course' End Date: 2x
- - 'Update Time Slots' Status Code is Success: 3x
- - 'Update Time Slots' Timeslots: 3x
+ - 'Create Coach' Status Code is Success: 4x
+ - 'Create Coach' Response: 4x
+ - 'Create Coach' Name: 4x
+ - 'Create Coach' Email: 4x
+ - All Assigned Coaches Must Be Suitable: 21x
+ - 'Update Course Skills' Status Code is Success: 3x
+ - 'Update Course Skills' Skills: 3x
+ - 'Update Coach Skills' Status Code is Success: 7x
+ - 'Update Coach Skills' Skills: 7x
+ - 'Update Time Slots' Status Code is Success: 4x
+ - 'Update Time Slots' Timeslots: 4x
  - 'Confirm Course' Status Code is Success: 2x
  - 'Confirm Course' Confirmed: 2x
  - 'Assign Coach to Course' Status Code is Success: 1x

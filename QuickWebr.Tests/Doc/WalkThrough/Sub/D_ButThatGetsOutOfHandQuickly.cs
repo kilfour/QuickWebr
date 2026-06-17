@@ -16,7 +16,7 @@ but most Apis contain a lot more methods and writing out all possible scenarios 
 The simple 'Horses for Courses' Api deals with Coaches and Courses,
 two related entities and already consist out of 7 calls. 
 
-QuickWebr however, allows you to explore all possible scenario's by using `.Methods(...)` instead of `.Scenario(...)`
+QuickWebr however, allows you to explore all possible scenarios by using `.Methods(...)` instead of `.Scenario(...)`
 """)]
 [DocExample(typeof(D_ButThatGetsOutOfHandQuickly), nameof(RunWebr))]
 [DocReportHeader]

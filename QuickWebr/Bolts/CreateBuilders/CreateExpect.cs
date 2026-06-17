@@ -35,17 +35,20 @@ public class CreateExpect<TReader, TRequest, TResponse, TPoolElement, TDbValue>(
         return (client, db) =>
             Trackr.PoolWhen(predicate,
                 from traceRoute in Checkr.Trace("Route", () => route)
+                from autopsyRoute in Autopsy.Note("Route", () => route)
                 from request in Checkr.Input($"'{name}' Request", fuzzr)
                 from response in Checkr.ShrinkableAct(name, () => client.PostAsJsonAsync(route, request))
                 from guard in Checkr.When(() => response.HasExecuted,
                     from responseIsSuccess in StatusCodeIs.Success(name, response)
-                    from result in Checkr.Capture(() => response.Result.Content.ReadFromJsonAsync<TResponse>().Result)
-                    from created in Checkr.Expect($"'{name}' Response", () => responseCheck(result))
-                    from stored in Trackr.ToPool($"'{name}' to Pool", () => toPool(request, result))
-                    from _ in Autopsy.Note("Create", () => $"{stored.GetType().Name}-{result}")
-                    from reloaded in Checkr.Capture(() => read(db, stored))
-                    from checks in Combine.Checkrs(expectations.Select(a =>
-                        Checkr.Expect($"'{name}' {a.label}", () => a.expectation(request, reloaded))))
+                    from succeeded in Checkr.When(() => responseIsSuccess,
+                        from result in Checkr.Capture(() => response.Result.Content.ReadFromJsonAsync<TResponse>().Result)
+                        from created in Checkr.Expect($"'{name}' Response", () => responseCheck(result))
+                        from stored in Trackr.ToPool($"'{name}' to Pool", () => toPool(request, result))
+                        from _ in Autopsy.Note("Create", () => $"{stored.GetType().Name}-{result}")
+                        from reloaded in Checkr.Capture(() => read(db, stored))
+                        from checks in Combine.Checkrs(expectations.Select(a =>
+                            Checkr.Expect($"'{name}' {a.label}", () => a.expectation(request, reloaded))))
+                        select Case.Closed)
                     from failureChecks in Combine.Checkrs(
                         failures.Select(a => a.GetCheckr(client, HttpMethod.Post, request)))
                     select Case.Closed)

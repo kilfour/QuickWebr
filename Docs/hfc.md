@@ -13,7 +13,10 @@ public class WebrApplicationFactory
             var descriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
             if (descriptor != null)
+            {
+                services.RemoveAll<DbContextOptions<AppDbContext>>();
                 services.RemoveAll<AppDbContext>();
+            }
             connection = new SqliteConnection("DataSource=:memory:");
             connection.Open();
             services.AddDbContext<AppDbContext>(options =>
@@ -28,8 +31,8 @@ public class WebrApplicationFactory
             var overrides = new Dictionary<string, string?>
             {
                 ["Auth:JwtKey"] = "a-very-long-random-secret-string",
-                ["Auth:Issuer"] = "https://hfcc.example",
-                ["Auth:Audience"] = "hfcc-api",
+                ["Auth:Issuer"] = "https://hfc.example",
+                ["Auth:Audience"] = "hfc-api",
             };
             cfg.AddInMemoryCollection(overrides);
         });
@@ -105,8 +108,9 @@ public class UpdateCoachSkills : ApiMethod<EfReader>
                         .Unique(Guid.NewGuid())
                         .Many(3, 5)
                 select new UpdateSkillsRequest([.. skills]))
-            .Store((coach, request) => coach with { Skills = request.Skills })
+            .Store((coach, request) => coach)
             .ReadBack((reader, info) => reader.Query(db => db.Find<Coach>(Id<Coach>.From(info.Id))))
+            .Probe("Skills", (info, request, coach) => coach!)
             .Expect(
                 ("Skills", (request, coach) => Skills.Equal(request.Skills, coach.Skills)));
 }
@@ -196,25 +200,27 @@ public class AssignCoachToCourse : ApiMethod<EfReader>
     public override Specification<EfReader> Define() =>
         Update("Assign Coach to Course")
             .When<CourseInfo, CoachInfo>(
-                (reader, course, coach) => course.IsConfirmed && IsSuitableFor(reader, course, coach))
+                (reader, course, coach) => course.IsConfirmed && IsValidFor(reader, course, coach))
             .Route((course, coach) => course.Id, a => $"/courses/{a}/assign-coach")
             .Send((course, coach) => new AssignCoachRequest(coach.Id))
             .Store((course, coach, request) => course)
             .ReadBack((reader, course, coach) => reader.Query(db => (
                 db.Find<Course>(Id<Course>.From(course.Id)),
                 db.Find<Coach>(Id<Coach>.From(coach.Id)))))
+            .Probe("Info", (p1, p2, r, e1, e2) => (p1.Id, p2.Id))
+            .Probe("Entities", (p1, p2, r, e1, e2) => (e1!.RequiredSkills, e2!.Skills))
             .Expect(
                 ("Coach is assigned", (request, course, coach) =>
                     course.AssignedCoach == coach &&
                     coach.AssignedCourses.Contains(course)));
-    private static bool IsSuitableFor(EfReader reader, CourseInfo courseInfo, CoachInfo coachInfo)
+    private static bool IsValidFor(EfReader reader, CourseInfo courseInfo, CoachInfo coachInfo)
     {
         var course = reader.Query(ctx => ctx.Find<Course>(Id<Course>.From(courseInfo.Id))!);
         if (course == null) return false;
         if (course.AssignedCoach != null) return false;
         var coach = reader.Query(ctx => ctx.Find<Coach>(Id<Coach>.From(coachInfo.Id))!);
         if (coach == null) return false;
-        return coach.IsSuitableFor(course);
+        return coach.IsSuitableFor(course) && coach.IsAvailableFor(course);
     }
 }
 ```
@@ -227,6 +233,10 @@ public class AssignedCoachesMustBeSuitable : Invariant<EfReader>
         Named("All Assigned Coaches Must Be Suitable")
             .ForAll<CoachInfo>((reader, coachInfo) =>
                 {
+                    var all = reader.Query(
+                        db => db.Set<Coach>().Include(a => a.AssignedCourses)
+                        .Single(a => a.Id == Id<Coach>.From(coachInfo.Id)));
+                    // all.PulseToLog("debug.log");
                     var coach = reader.Query(db => db.Find<Coach>(Id<Coach>.From(coachInfo.Id))!);
                     return coach.AssignedCourses.All(course => coach.IsSuitableFor(course));
                 });
@@ -363,5 +373,5 @@ GetWebr().ReviewColdCases().Run(3.Runs(), 25.ExecutionsPerRun());
 
 **Diagnostics:**  
 ```csharp
-GetWebr().Autopsy(1750761734, 20.ExecutionsPerRun(), AutopsyProbe.StartsWith("ActionShrinking"));
+GetWebr().Autopsy(1750761734, 20.ExecutionsPerRun(), AutopsyProbe.ActionShrinking);
 ```

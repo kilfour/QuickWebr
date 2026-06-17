@@ -5,12 +5,12 @@ using HorsesForCourses.Domain.Coaches;
 using HorsesForCourses.Domain.Courses;
 using HorsesForCourses.Domain.Courses.TimeSlots;
 using HorsesForCourses.Domain.Skills;
+using Microsoft.EntityFrameworkCore;
 using QuickCheckr;
 using QuickCheckr.Diagnostics;
 using QuickCheckr.UnderTheHood;
 using QuickFuzzr;
 using QuickPulse.Explains;
-using QuickPulse.Show;
 using QuickWebr.Tests.Tools;
 using WibblyWobbly;
 
@@ -37,7 +37,7 @@ namespace QuickWebr.Tests.HorsesForCoursesTests;
 [DocExample(typeof(Skills))]
 [DocReportHeader]
 [DocReport]
-[DocHeader("Addendum: Free QuickCheckr functionality.")]
+[DocHeader("Addendum: QuickCheckr features you get for free.")]
 [DocBoldHeader("Scenarios")]
 [DocExample(typeof(HorsesForCoursesAcceptanceTests), nameof(Scenario))]
 [DocBoldHeader("Investigating")]
@@ -72,7 +72,7 @@ public class HorsesForCoursesAcceptanceTests : WebrTest<HorsesForCoursesAcceptan
     [Fact(Skip = "debug")]
     [CodeSnippet]
     public void Autopsy() =>
-        GetWebr().Autopsy(1750761734, 20.ExecutionsPerRun(), AutopsyProbe.StartsWith("ActionShrinking"));
+        GetWebr().Autopsy(1750761734, 20.ExecutionsPerRun(), AutopsyProbe.ActionShrinking);
 
     [Fact(Skip = "debug")]
     [CodeSnippet]
@@ -147,6 +147,7 @@ public class UpdateCoachSkills : ApiMethod<EfReader>
                 select new UpdateSkillsRequest([.. skills]))
             .Store((coach, request) => coach)
             .ReadBack((reader, info) => reader.Query(db => db.Find<Coach>(Id<Coach>.From(info.Id))))
+            .Probe("Skills", (info, request, coach) => coach!)
             .Expect(
                 ("Skills", (request, coach) => Skills.Equal(request.Skills, coach.Skills)));
 }
@@ -248,6 +249,8 @@ public class AssignCoachToCourse : ApiMethod<EfReader>
             .ReadBack((reader, course, coach) => reader.Query(db => (
                 db.Find<Course>(Id<Course>.From(course.Id)),
                 db.Find<Coach>(Id<Coach>.From(coach.Id)))))
+            .Probe("Info", (p1, p2, r, e1, e2) => (p1.Id, p2.Id))
+            .Probe("Entities", (p1, p2, r, e1, e2) => (e1!.RequiredSkills, e2!.Skills))
             .Expect(
                 ("Coach is assigned", (request, course, coach) =>
                     course.AssignedCoach == coach &&

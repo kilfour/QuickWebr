@@ -9,12 +9,30 @@ public class UpdateExpect<TReader, TPoolElementOne, TPoolElementTwo, TRequest, T
     string name,
     HttpMethod httpMethod,
     Func<TReader, TPoolElementOne, TPoolElementTwo, bool> predicate,
-    Func<TPoolElementOne, TPoolElementTwo, FuzzrOf<TRequest>> fuzzrFactory,
+    Func<TPoolElementOne, TPoolElementTwo, TRequest> requestFactory,
     Func<TPoolElementOne, TPoolElementTwo, TRouteId> getRouteId,
     Func<TRouteId, string> routeFactory,
     Func<TPoolElementOne, TPoolElementTwo, TRequest, TPoolElementOne> store,
     Func<TReader, TPoolElementOne, TPoolElementTwo, (TDbValueOne, TDbValueTwo)> read)
 {
+    private readonly List<(string ProbeLabel, Func<TPoolElementOne, TPoolElementTwo, TRequest, TDbValueOne, TDbValueTwo, object> Factory)> probes = [];
+    public UpdateExpect<TReader, TPoolElementOne, TPoolElementTwo, TRequest, TRouteId, TDbValueOne, TDbValueTwo> Probe(
+        string probeLabel,
+        Func<TPoolElementOne, TPoolElementTwo, TRequest, TDbValueOne, TDbValueTwo, object> factory)
+    {
+        probes.Add((probeLabel, factory));
+        return this;
+    }
+
+    private readonly List<(string TraceLabel, Func<TPoolElementOne, TPoolElementTwo, TRequest, TDbValueOne, TDbValueTwo, object> Factory)> traces = [];
+    public UpdateExpect<TReader, TPoolElementOne, TPoolElementTwo, TRequest, TRouteId, TDbValueOne, TDbValueTwo> Trace(
+        string traceLabel,
+        Func<TPoolElementOne, TPoolElementTwo, TRequest, TDbValueOne, TDbValueTwo, object> factory)
+    {
+        traces.Add((traceLabel, factory));
+        return this;
+    }
+
     // private readonly List<MethodFailure<TPoolElement, TRequest, TRouteId>> failures = [];
 
     // public UpdateExpect<TReader, TPoolElement, TRequest, TRouteId, TDbValue> FailsWith(
@@ -54,17 +72,22 @@ public class UpdateExpect<TReader, TPoolElementOne, TPoolElementTwo, TRequest, T
             Trackr.PoolWhen<TPoolElementOne, TPoolElementTwo>(name, (a, b) => predicate(db, a, b), (elementOne, elementTwo) =>
                 from route in Checkr.Capture(() => routeFactory(getRouteId(elementOne.Value, elementTwo.Value)))
                 from traceRoute in Checkr.Trace("Route", () => route)
-                from request in Checkr.Input($"'{name}' Request", fuzzrFactory(elementOne.Value, elementTwo.Value))
+                from autopsyRoute in Autopsy.Note("Route", () => route)
+                from request in Checkr.Capture(() => requestFactory(elementOne.Value, elementTwo.Value))
+                from traceRequest in Checkr.Trace($"'{name}' Request", () => request)
                 from response in Checkr.ShrinkableAct(name,
                     () => Send<TRequest>.Request(client, httpMethod, route, request))
                 from guard in Checkr.When(() => response.HasExecuted,
                     from responseIsSuccess in StatusCodeIs.Success(name, response)
-                    from _ in Autopsy.Note("((el1.Id, el1.Value), (el2.Id, el2.Value))",
-                        () => ((elementOne.Id, elementOne.Value), (elementTwo.Id, elementTwo.Value)))
+                    from _ in Autopsy.Note("Status", () => $"{response.Result.StatusCode}")
+                    from __ in Autopsy.Note("Update",
+                        () => (elementOne.Value!, elementTwo.Value!))
                     from stored in elementOne.Replace(store(elementOne.Value, elementTwo.Value, request))
                     from reloaded in Checkr.Capture(() => read(db, elementOne.Value, elementTwo.Value))
-                        // from traces in Combine.Checkrs(traces.Select(a =>
-                        //     Checkr.Trace($"'{name}' {a.TraceLabel}", () => a.Factory(element.Value, request, reloaded))))
+                    from tracesCheckr in Combine.Checkrs(traces.Select(a =>
+                        Checkr.Trace($"'{name}' {a.TraceLabel}", () => a.Factory(elementOne.Value, elementTwo.Value, request, reloaded.Item1, reloaded.Item2))))
+                    from probesCheckr in Combine.Checkrs(probes.Select(a =>
+                        Autopsy.Note($"'{name}' {a.ProbeLabel}", () => a.Factory(elementOne.Value, elementTwo.Value, request, reloaded.Item1, reloaded.Item2))))
                     from checks in Combine.Checkrs(expectations.Select(a =>
                         Checkr.Expect($"'{name}' {a.label}", () => a.expectation(request, reloaded.Item1, reloaded.Item2))))
                         // from failureChecks in Combine.Checkrs(
