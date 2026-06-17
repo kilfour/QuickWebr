@@ -201,6 +201,7 @@ WebrRunner()
     .Observe()
     .Run(1.Runs(), 20.ExecutionsPerRun());
 ```
+`.Observe()` turns the selected API methods into an executable *Checkr*. We'll revisit this later.  
 
 **The Report:**  
 ```text
@@ -237,7 +238,7 @@ Maybe you thought it was the materialization method of the underlying builder in
 
 You are partially right, but ...
 
-We can also define observations:
+We can also define observations:.   
 ```csharp
 public class AssignedCoachesMustBeSuitable : Invariant<EfReader>
 {
@@ -245,11 +246,10 @@ public class AssignedCoachesMustBeSuitable : Invariant<EfReader>
         Named("All Assigned Coaches Must Be Suitable")
             .ForAll<CoachInfo>((reader, coachInfo) =>
                 {
-                    var all = reader.Query(
-                        db => db.Set<Coach>().Include(a => a.AssignedCourses)
-                        .Single(a => a.Id == Id<Coach>.From(coachInfo.Id)));
-                    // all.PulseToLog("debug.log");
-                    var coach = reader.Query(db => db.Find<Coach>(Id<Coach>.From(coachInfo.Id))!);
+                    var coach = reader.Query(db =>
+                        db.Set<Coach>()
+                            .Include(a => a.AssignedCourses)
+                            .Single(a => a.Id == Id<Coach>.From(coachInfo.Id)));
                     return coach.AssignedCourses.All(course => coach.IsSuitableFor(course));
                 });
 }
@@ -265,15 +265,15 @@ WebrRunner()
         new UpdateTimeSlots(),
         new ConfirmCourse(),
         new AssignCoachToCourse())
-.Observe(new AssignedCoachesMustBeSuitable())
-.Run(5.Runs(), 50.ExecutionsPerRun());
+    .Observe(new AssignedCoachesMustBeSuitable())
+    .Run(5.Runs(), 50.ExecutionsPerRun());
 ```
 
 **The Report:**  
 ```text
 ------------------------------------------------------------
  Test:                    Example
- Location:                E_Invariants.cs:45:1
+ Location:                E_Invariants.cs:42:1
  Original failing run:    23 executions
  Minimal failing case:    8 executions (after 27 shrinks)
  Seed:                    2093915464

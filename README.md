@@ -135,7 +135,7 @@ dotnet add package QuickWebr
 
 QuickWebr is young, but the examples are executable and focused on real ASP.NET API testing.
 
-Start with the walkthrough, then look at the small Contact Manager example and the larger Horses for Courses acceptance tests.
+Start with the [walkthrough](https://github.com/kilfour/QuickWebr/blob/main/Docs/walkthrough.md), then look at the small [Contact Manager](https://github.com/kilfour/QuickWebr/blob/main/Docs/contact-manager.md) example and the larger [Horses for Courses](https://github.com/kilfour/QuickWebr/blob/main/Docs/hfc.md) acceptance tests.
 
 ## Dependencies
 

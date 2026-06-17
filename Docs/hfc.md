@@ -233,11 +233,10 @@ public class AssignedCoachesMustBeSuitable : Invariant<EfReader>
         Named("All Assigned Coaches Must Be Suitable")
             .ForAll<CoachInfo>((reader, coachInfo) =>
                 {
-                    var all = reader.Query(
-                        db => db.Set<Coach>().Include(a => a.AssignedCourses)
-                        .Single(a => a.Id == Id<Coach>.From(coachInfo.Id)));
-                    // all.PulseToLog("debug.log");
-                    var coach = reader.Query(db => db.Find<Coach>(Id<Coach>.From(coachInfo.Id))!);
+                    var coach = reader.Query(db =>
+                        db.Set<Coach>()
+                            .Include(a => a.AssignedCourses)
+                            .Single(a => a.Id == Id<Coach>.From(coachInfo.Id)));
                     return coach.AssignedCourses.All(course => coach.IsSuitableFor(course));
                 });
 }
@@ -347,19 +346,7 @@ public static class Skills
  - 'Assign Coach to Course' Coach is assigned: 1x
  ------------------------------------------------------------
 ```
-## Addendum: Free QuickCheckr functionality.
-
-**Scenarios:**  
-```csharp
-Webr.Named("Horses for Courses")
-    .Context(() => new WebrApplicationFactory())
-    .Client(a => a.CreateClient())
-    .Authentication(a => a.HasBearerToken(), a => a.AuthenticateViaTokenEndpointAsync())
-    .Reader(a => a.GetReader())
-    .Scenario(
-        new CreateCourse(),
-        new UpdateCourseSkills());
-```
+## Addendum: QuickCheckr features you get for free.
 
 **Investigating:**  
 ```csharp

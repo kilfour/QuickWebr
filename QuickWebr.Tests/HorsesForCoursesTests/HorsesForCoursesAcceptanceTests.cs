@@ -38,8 +38,6 @@ namespace QuickWebr.Tests.HorsesForCoursesTests;
 [DocReportHeader]
 [DocReport]
 [DocHeader("Addendum: QuickCheckr features you get for free.")]
-[DocBoldHeader("Scenarios")]
-[DocExample(typeof(HorsesForCoursesAcceptanceTests), nameof(Scenario))]
 [DocBoldHeader("Investigating")]
 [DocExample(typeof(HorsesForCoursesAcceptanceTests), nameof(Conducting))]
 [DocBoldHeader("Cold Cases (Vault)")]
@@ -56,18 +54,6 @@ public class HorsesForCoursesAcceptanceTests : WebrTest<HorsesForCoursesAcceptan
     [Fact(Skip = "Explicit")]
     public void Example() =>
         Document(a => a.Run(1211418307, 50.ExecutionsPerRun()), _ => { });
-
-    [Fact(Skip = "debug")]
-    [CodeSnippet]
-    public void Scenario() =>
-        Webr.Named("Horses for Courses")
-            .Context(() => new WebrApplicationFactory())
-            .Client(a => a.CreateClient())
-            .Authentication(a => a.HasBearerToken(), a => a.AuthenticateViaTokenEndpointAsync())
-            .Reader(a => a.GetReader())
-            .Scenario(
-                new CreateCourse(),
-                new UpdateCourseSkills());
 
     [Fact(Skip = "debug")]
     [CodeSnippet]
