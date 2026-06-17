@@ -139,7 +139,7 @@ Start with the walkthrough, then look at the small Contact Manager example and t
 
 ## Dependencies
 
-* **QuickWebr**: Stateful checking, shrinking, reporting, seeds, investigations, and diagnostics.
+* **QuickWCheckr**: Stateful checking, shrinking, reporting, seeds, investigations, and diagnostics.
 * **QuickFuzzr**: Random request and input generation.
 * **QuickPulse** / **QuickPulse.Show**: Reporting, diagnostics, and value display.
 
