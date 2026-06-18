@@ -1,5 +1,5 @@
-## Walk Through
-### Infrastructure Setup
+# Walk Through
+## Infrastructure Setup
 First things first.  
 We need to go through the usual WebApi acceptance test setup ceremony.  
 In this one we swap out the configured DbContext with an in-memory sqlite one.  
@@ -70,7 +70,7 @@ public static WebrRunner<WebrApplicationFactory, EfReader> WebrRunner() =>
         .Authentication(a => a.HasBearerToken(), a => a.AuthenticateViaTokenEndpointAsync())
         .Reader(a => a.GetReader());
 ```
-### The First Api Method
+## The First Api Method
 So now we can define `ApiMethod` derived classes representing calls to our Api. 
 
 Here's an annotated example:  
@@ -107,7 +107,7 @@ Which we can run like so:
 ```csharp
 // From Infrastructure Setup.
 WebrRunner()
-    .Scenario(new CreateCoach());
+    .Scenario(new CreateCoachAnnotated());
 ```
 
 **The Report:**  
@@ -123,7 +123,7 @@ WebrRunner()
  - 'Create Coach' Email: 1x
  ------------------------------------------------------------
 ```
-### Another Method
+## Another Method
 Up to this point we have not really gained much.  
 We added a dependency on a new library, incurring the cost of getting to know the lingo,
 and although I personally kind of like it, we have not really simplified things greatly.
@@ -179,7 +179,7 @@ WebrRunner()
  - 'Update Coach Skills' Skills: 1x
  ------------------------------------------------------------
 ```
-### But That Gets Out Of Hand Quickly
+## But That Gets Out Of Hand Quickly
 Indeed it does.  
 For simple scenarios the previous examples work fine,
 but most Apis contain a lot more methods and writing out all possible scenarios gets very tedious, very quickly.
@@ -230,7 +230,7 @@ WebrRunner()
  - 'Update Coach Skills' Skills: 4x
  ------------------------------------------------------------
 ```
-### Invariants
+## Invariants
 > The final sales pitch.
 
 You may have noticed the redundant looking call to `Observe` in the previous example.  

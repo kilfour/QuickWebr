@@ -92,26 +92,16 @@ public class HorsesForCoursesAcceptanceTests : WebrTest<HorsesForCoursesAcceptan
 public class CreateCoach : ApiMethod<EfReader>
 {
     public override Specification<EfReader> Define() =>
-         // The name of the Api Method
-         // `Create` defaults to `HttpMethod.Post` and also defines the correct fluent pipeline
          Create("Create Coach")
-             // Condition that decides whether or not this method can be run.
-             // The generic type parameter defines the type of data the Webr uses to keep track of things (see below).
              .When<CoachInfo>(a => a.Count <= 3)
-             // The route for this method.
              .Route("/coaches")
-             // Perform the call using a random request.
              .Send(
                 from name in Fuzzr.String()
                 from email in Fuzzr.String()
                 select new RegisterCoachRequest(name, email))
-             // Simple check on the response from above call.
              .ResponseIs<int>(response => response > 0)
-             // Store any info needed in order to drive and/or validate future method calls.
              .Store(response => new CoachInfo(response))
-             // Retrieve data from the system for validation.
              .ReadBack((reader, info) => reader.Query(db => db.Find<Coach>(Id<Coach>.From(info.Id))))
-             // Assert that the entity (Coach) is created correctly in the system.
              .Expect(
                  ("Name", (request, coach) => coach.Name.Value == request.Name),
                  ("Email", (request, coach) => coach.Email.Value == request.Email));

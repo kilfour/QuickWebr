@@ -1,7 +1,6 @@
 using QuickCheckr;
 using QuickCheckr.Authoring.ThePress.Printing;
 using QuickPulse.Explains;
-using QuickWebr.Tests.Docs.WalkThrough.Sub;
 using QuickWebr.Tests.HorsesForCoursesTests;
 using QuickWebr.Tests.Tools;
 
