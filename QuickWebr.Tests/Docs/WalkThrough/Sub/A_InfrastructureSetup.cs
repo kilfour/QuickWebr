@@ -3,7 +3,7 @@ using QuickPulse.Explains;
 using QuickWebr.Bolts.WebrBuilders;
 using QuickWebr.Tests.HorsesForCoursesTests;
 
-namespace QuickWebr.Tests.Doc.WalkThrough.Sub;
+namespace QuickWebr.Tests.Docs.WalkThrough.Sub;
 
 [DocFile]
 [DocContent(

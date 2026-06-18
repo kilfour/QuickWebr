@@ -1,6 +1,6 @@
 using QuickPulse.Explains;
 
-namespace QuickWebr.Tests.Doc.WalkThrough;
+namespace QuickWebr.Tests.Docs.WalkThrough;
 
 [DocFile]
 public class WalkThroughTests { }
